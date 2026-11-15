@@ -161,6 +161,8 @@ Open index.html in your browser. No build step.
 <br>No. It only finds and counts faces.
 </details>
 
+📄 **Research paper:** [Read the paper](paper/paper.md) · [Word version](paper/Octo-Research-Paper.docx)
+
 ## 🗺️ Roadmap
 - [x] v1.0.0: detector, remover and everyday tools
 - [ ] Read text from scanned PDFs and images
