@@ -1,0 +1,79 @@
+name: Publish AI Octopus release and backend package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-release.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version without v (example 2.4.1)'
+        required: true
+        default: '2.4.0'
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Select release version
+        id: version
+        shell: bash
+        env:
+          REQUESTED_VERSION: ${{ inputs.version || '2.4.0' }}
+        run: |
+          if [[ ! "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Only numeric SemVer supported"; exit 1; fi
+          echo "tag=v$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies and run tests
+        working-directory: ai-octopus-v2
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+          npm run web:build
+      - name: Package source and web downloads
+        shell: bash
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output="dist/AI-Octopus-source-${{ steps.version.outputs.tag }}.zip" HEAD
+          (cd app && zip -q -r "../dist/AI-Octopus-web-${{ steps.version.outputs.tag }}.zip" .)
+          unzip -t dist/AI-Octopus-web-*.zip | tail -n 2
+          sha256sum dist/*.zip
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish optional API container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ai-octopus-v2/Dockerfile
+          push: true
+          tags: ghcr.io/dapperdude404/octo-api:${{ steps.version.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/dapperdude404/octo
+            org.opencontainers.image.description=AI Octopus Node.js API requires a separate host PostgreSQL and private secrets
+      - name: Create a GitHub release and attach ZIPs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping rather than overwriting existing assets"
+          else
+            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "AI Octopus $TAG" --notes-file RELEASE_NOTES_v2.4.0.md
+          fi
