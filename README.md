@@ -25,7 +25,7 @@
 ## 👋 About
 Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for students and writers who want to check their text and finish everyday tasks in one place.
 
-**Developer:** [dapperdude404](https://github.com/dapperdude404)
+**Developer:** [dapperdude404](https://github.com/dapperdude404) · **Portfolio:** [Aryan Sengar — AI & Engineering](https://ai-journey-engineering-portfolio.leafyhutch64.chatgpt.site)
 
 ## ⚡ Try it in 30 seconds
 1. Open the **[live demo](https://dapperdude404.github.io/octo/)**.
