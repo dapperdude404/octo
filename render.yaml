@@ -1,0 +1,30 @@
+# AI Octopus backend preview; deploy after connecting Render account.
+# The free Postgres database is temporary and unsuitable for permanent user data.
+services:
+  - type: web
+    name: ai-octopus-api
+    runtime: docker
+    repo: https://github.com/dapperdude404/octo
+    branch: main
+    region: singapore
+    plan: free
+    dockerContext: .
+    dockerfilePath: ./ai-octopus-v2/Dockerfile
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ORIGIN
+        value: https://dapperdude404.github.io
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-octopus-db
+          property: connectionString
+databases:
+  - name: ai-octopus-db
+    databaseName: ai_octopus
+    region: singapore
+    plan: free
