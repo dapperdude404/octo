@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/release-backup.yml'
+      - 'ai-octopus-v2/package.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,16 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Package source and published website
+      - name: Package versioned source and published website
         run: |
+          version=$(node -p "require('./ai-octopus-v2/package.json').version")
           mkdir -p dist
-          git archive --format=zip --output=dist/AI-Octopus-v2.4.0-source.zip HEAD
-          (cd app && zip -q -r ../dist/AI-Octopus-v2.4.0-web.zip .)
-          unzip -t dist/AI-Octopus-v2.4.0-web.zip | tail -n 2
+          git archive --format=zip --output="dist/AI-Octopus-v${version}-source.zip" HEAD
+          (cd app && zip -q -r "../dist/AI-Octopus-v${version}-web.zip" .)
+          unzip -t "dist/AI-Octopus-v${version}-web.zip" | tail -n 2
+          sha256sum dist/*.zip
       - name: Upload source and web backup ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: ai-octopus-v2.4.0-release-drive-backup
+          name: ai-octopus-release-drive-backup
           path: dist/*.zip
           retention-days: 14
           if-no-files-found: error
