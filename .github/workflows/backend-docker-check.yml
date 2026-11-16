@@ -1,0 +1,24 @@
+name: Verify AI Octopus backend Docker image
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ai-octopus-v2/Dockerfile'
+      - 'ai-octopus-v2/server/**'
+      - 'ai-octopus-v2/package.json'
+      - 'render.yaml'
+      - '.github/workflows/backend-docker-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deployable Docker image
+        run: docker build -f ai-octopus-v2/Dockerfile -t ai-octopus-backend:check .
+      - name: Verify bundled migrations and runtime
+        run: |
+          docker run --rm --entrypoint sh ai-octopus-backend:check -c 'test -s server/prisma/migrations/20261117000000_initial/migration.sql && test -s server/public/index.html && node --version && ./node_modules/.bin/prisma --version'
