@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b111d">
+  <meta name="description" content="AI Octopus — analyze writing patterns, improve clarity, review grammar and compare drafts in one focused workspace.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/octopus.svg" type="image/svg+xml">
+  <title>AI Octopus — Your writing, in focus.</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="app-shell" id="app-shell">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="identity" href="#top" aria-label="AI Octopus home">
+        <span class="logo-wrap"><img src="./assets/octopus.svg" width="36" height="36" alt=""></span>
+        <span class="identity-name"><strong>AI <span>OCTOPUS</span></strong><small>Writing intelligence</small></span>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation"><a href="#workspace">Workspace</a><a href="#toolbox">Tools</a><a href="#why-octo">Why Octopus</a></nav>
+      <div class="header-actions">
+        <span class="status-dot" title="Local tools are available without an account">Browser tools ready</span>
+        <button class="icon-button" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">☀</button>
+        <button class="account-button" id="account-button">Sign in <span aria-hidden="true">↗</span></button>
+        <button class="icon-button menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
+      </div>
+    </div>
+    <nav class="mobile-nav hidden" id="mobile-nav" aria-label="Mobile navigation"><a href="#workspace">Workspace</a><a href="#toolbox">Explore tools</a><a href="#why-octo">About AI Octopus</a><button id="mobile-account">Account / Sign in</button></nav>
+  </header>
+
+  <main id="top">
+    <div role="status" style="max-width:1100px;margin:16px auto 0;padding:12px 18px;border:1px solid #53667a;border-radius:12px;font-size:14px;line-height:1.5">🌐 <strong>Online browser edition:</strong> Writing analysis, grammar, clarity, and draft comparison run in your browser. Accounts, PDF/DOCX extraction, and paid AI-provider scans require a separate hosted backend.</div>
+    <section class="hero container">
+      <div class="hero-content">
+        <p class="eyebrow"><span class="eyebrow-line"></span> MEET YOUR WRITING CO-PILOT <span class="eyebrow-star">✳</span></p>
+        <h1>Every word,<br><em>understood.</em></h1>
+        <p class="hero-lead">An intelligent writing space to check patterns, sharpen ideas, and make every draft feel more like you.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#workspace">Open workspace <span aria-hidden="true">↗</span></a><a class="btn btn-link" href="#toolbox">Explore tools <span aria-hidden="true">→</span></a></div>
+        <div class="hero-trust"><span class="mini-avatars"><i>✦</i><i>✓</i><i>✎</i></span><span><strong>Online tools, no install needed</strong><br>Accounts, PDF/DOCX and provider scans need a connected server</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-grid"></div><div class="art-glow"></div>
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+        <div class="float-panel panel-ai"><span class="float-icon">◈</span><span><strong>Pattern insights</strong><small>Understand your text</small></span><span class="float-check">✓</span></div>
+        <div class="octo-disc"><img src="./assets/octopus.svg" alt=""></div>
+        <div class="float-panel panel-clarity"><span class="float-icon">✧</span><span><strong>Clarity improved</strong><small>Write with purpose</small></span><span class="float-check">↗</span></div>
+        <div class="art-badge">8 arms. <b>One smarter workflow.</b></div>
+      </div>
+    </section>
+
+    <section class="features-strip" aria-label="Features"><div class="container strip-inner"><span>◈ <b>Pattern analysis</b></span><span>✧ <b>Clarity editor</b></span><span>✓ <b>Grammar review</b></span><span>⇄ <b>Draft comparison</b></span><span>⌘ <b>Document tools</b></span></div></section>
+
+    <section class="workspace-section container" id="workspace">
+      <div class="section-heading"><div><p class="eyebrow">YOUR CREATIVE CONTROL CENTER</p><h2>The Octopus <em>workspace</em></h2><p>One place, multiple ways to make progress.</p></div><div class="section-heading-side"><span class="live-pill"><span class="pulse"></span> LOCAL ANALYSIS</span><span class="hint">No account required</span></div></div>
+      <div class="workspace-frame">
+        <div class="tool-tabs" role="tablist" aria-label="Writing tools">
+          <button class="tool-tab active" data-tab="detector" role="tab" aria-selected="true"><span>◈</span> AI Detector</button>
+          <button class="tool-tab" data-tab="editor" role="tab" aria-selected="false"><span>✧</span> Clarity Editor</button>
+          <button class="tool-tab" data-tab="grammar" role="tab" aria-selected="false"><span>✓</span> Grammar</button>
+          <button class="tool-tab" data-tab="compare" role="tab" aria-selected="false"><span>⇄</span> Compare</button>
+          <button class="tool-tab" data-tab="providers" role="tab" aria-selected="false"><span>⌘</span> Provider Scans</button>
+          <button class="tool-tab" data-tab="history" role="tab" aria-selected="false"><span>◷</span> History</button>
+        </div>
+        <div class="workspace-body">
+          <div class="editor-column" id="shared-editor-column">
+            <div class="pane-header"><div><div class="pane-icon">✎</div><div><h3>Your text</h3><p>Paste or type the writing you'd like to explore.</p></div></div><span class="secure-label"><span>●</span> Private local check</span></div>
+            <label class="sr-only" for="editor">Text to analyze</label>
+            <textarea class="text-editor" id="editor" spellcheck="true" placeholder="The best ideas start with a single sentence. Paste your essay, article, email or draft here to begin…"></textarea>
+            <div class="text-meta"><span id="word-count">0 words</span><span id="char-count">0 characters</span><span id="read-time">0 min read</span><span id="file-name"></span></div>
+            <div class="editor-tools"><div class="editor-tools-left"><button class="subtle-btn" id="sample-button">✦ Try sample</button><label class="subtle-btn upload-label" for="file">↥ Upload file</label><input id="file" class="visually-hidden" type="file" accept=".txt,.docx,.pdf,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><button class="subtle-btn" id="paste-button">▣ Paste</button></div><div><button class="subtle-btn icon-subtle" id="clear-button" title="Clear text" aria-label="Clear text">↺</button><button class="subtle-btn icon-subtle" id="copy-button" title="Copy text" aria-label="Copy text">⧉</button><button class="subtle-btn icon-subtle" id="download-button" title="Download as TXT" aria-label="Download text">↓</button></div></div>
+            <div class="editor-bottom"><p id="editor-help">Enter at least <b>40 words</b> for the AI-like pattern estimate.</p><button class="btn btn-primary btn-action" id="primary-action">Analyze writing <span>→</span></button></div>
+          </div>
+
+          <div class="results-column" id="detector-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">◈</div><div><h3>Pattern insights</h3><p>Surface-level signals in your writing</p></div></div><span class="result-tag" id="result-tag">READY</span></div>
+            <div class="score-section" id="score-section"><div class="score-ring" id="score-ring" role="meter" aria-label="AI-like writing pattern score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="score-core"><strong id="score-number">—</strong><span>out of 100</span></div></div><div class="score-copy"><p class="score-caption">AI-LIKE PATTERN SCORE</p><h3 id="score-label">Your score awaits</h3><p id="score-summary">Add a passage and press Analyze writing to see Octopus's pattern breakdown.</p></div></div>
+            <div class="scale"><span>Human-like patterns</span><span>AI-like patterns</span></div>
+            <div class="score-track"><span class="score-gradient"></span><span id="score-pin" class="score-pin" style="left:0%"></span></div>
+            <div class="analysis-divider"></div>
+            <div class="signal-header"><h4>Writing signals</h4><span id="signals-count">0 insights</span></div>
+            <div class="signals-list" id="signals-list"><div class="empty-insight"><span>✳</span><p>Your insights will appear here after analysis.</p></div></div>
+            <div class="disclaimer"><span>ⓘ</span><p><b>A helpful hint, not a verdict.</b> This heuristic counts selected writing patterns, not true authorship probabilities. Human and AI-written texts can score similarly.</p></div>
+          </div>
+
+          <div class="results-column tool-view hidden" id="editor-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">✧</div><div><h3>Clarity editor</h3><p>Simple, explainable wording suggestions</p></div></div><span class="result-tag">LOCAL TOOL</span></div>
+            <div class="tool-intro"><span class="tool-intro-icon">✦</span><h3>Keep your voice.<br>Lose the clutter.</h3><p>Octopus makes a few rule-based edits to wordy expressions and whitespace. Review the changes before applying them.</p></div>
+            <div class="preview-header"><h4>Suggested revision</h4><button class="subtle-btn" id="copy-revision">⧉ Copy</button></div>
+            <div class="revision-preview" id="revision-preview">Your revised draft will appear here.</div>
+            <div class="tool-view-actions"><button id="apply-revision" class="btn btn-primary" disabled>Apply changes <span>↗</span></button><button class="btn btn-outline" id="restore-original" disabled>Restore original</button></div>
+            <p class="helper-text">This isn't an AI rewriting service and doesn't promise to evade detectors.</p>
+          </div>
+
+          <div class="results-column tool-view hidden" id="grammar-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">✓</div><div><h3>Grammar review</h3><p>Quick checks for common writing errors</p></div></div><span class="result-tag">LOCAL TOOL</span></div>
+            <div class="result-hero-line"><span class="result-hero-icon">✓</span><div><h3 id="grammar-summary">Ready when you are</h3><p id="grammar-sub">Review punctuation, spacing, repeated words and selected grammar patterns.</p></div></div>
+            <div id="grammar-list" class="grammar-list"><div class="empty-insight"><span>✳</span><p>Choose Grammar and press Check grammar to begin.</p></div></div>
+            <p class="helper-text">Rules-based proofread; not a complete grammar or style evaluation.</p>
+          </div>
+
+          <div class="results-column tool-view hidden" id="compare-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">⇄</div><div><h3>Compare drafts</h3><p>Spot word-level additions and removals</p></div></div><span class="result-tag">BROWSER TOOL</span></div>
+            <label class="field-label" for="compare-text">Second version</label><textarea id="compare-text" class="compare-editor" placeholder="Paste the revised version here. Your original is in the editor on the left."></textarea>
+            <button class="btn btn-primary compare-submit" id="compare-button">Compare versions <span>→</span></button>
+            <div class="compare-results" id="compare-results"><p class="muted">Highlights will appear here after comparing two drafts.</p></div>
+          </div>
+
+          <div class="results-column tool-view hidden" id="providers-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">⌘</div><div><h3>Provider scans</h3><p>Optional third-party checks via API</p></div></div><span class="result-tag">ACCOUNT + KEYS</span></div>
+            <div class="provider-info"><span>🔒</span><div><strong>Connected accounts are optional</strong><p>Choose a service only if you've configured its server-side API key. Some providers charge per scan and may process submitted text externally.</p></div></div>
+            <label class="field-label" for="scan-kind">Scan type</label><select id="scan-kind" class="form-control"><option value="ai">AI text classification</option><option value="plagiarism">Plagiarism / similarity</option></select>
+            <label class="field-label" for="scan-title">Document name</label><input id="scan-title" class="form-control" maxlength="160" placeholder="Untitled document">
+            <fieldset class="provider-fieldset"><legend>Choose providers</legend><label class="provider-option"><input type="checkbox" value="gptzero" checked><span><b>GPTZero</b><small>AI classification</small></span></label><label class="provider-option"><input type="checkbox" value="winston"><span><b>Winston AI</b><small>AI / plagiarism</small></span></label><label class="provider-option"><input type="checkbox" value="copyleaks"><span><b>Copyleaks</b><small>AI / plagiarism</small></span></label></fieldset>
+            <button class="btn btn-primary provider-submit" id="scan-button">Submit selected scans <span>↗</span></button>
+            <div id="provider-results" class="provider-results"><p class="muted">No provider scans submitted this session.</p></div>
+          </div>
+
+          <div class="results-column tool-view hidden" id="history-view">
+            <div class="pane-header"><div><div class="pane-icon dark-icon">◷</div><div><h3>Scan history</h3><p>Saved provider requests for your account</p></div></div><button class="subtle-btn" id="refresh-history">↻ Refresh</button></div>
+            <div id="history-results"><div class="empty-insight"><span>◷</span><p>Sign in to see scans saved to your account.</p></div></div>
+          </div>
+        </div>
+        <div class="workspace-footer"><div><span class="workspace-footer-icon">◎</span><span><b>Built for careful writing</b><small>Original AI Octopus tools, not a certification of human authorship.</small></span></div><span class="workspace-footer-version">OCTO V2.1 · OPEN WORKSPACE</span></div>
+      </div>
+    </section>
+
+    <section class="tools-section container" id="toolbox"><div class="section-heading"><div><p class="eyebrow">EVERY TOOL HAS A PURPOSE</p><h2>More ways to <em>make it better.</em></h2><p>Jump between workflows without losing your draft.</p></div></div><div class="tool-grid">
+      <button class="tool-card" data-goto="detector"><span class="tool-card-icon violet">◈</span><span class="tool-card-category">ANALYZE</span><strong>AI pattern detector</strong><p>Get a transparent 0–100 estimate and explore the signals behind it.</p><span class="tool-card-link">Open tool ↗</span></button>
+      <button class="tool-card" data-goto="editor"><span class="tool-card-icon mint">✧</span><span class="tool-card-category">REFINE</span><strong>Clarity editor</strong><p>Cut wordy expressions and keep your message direct and readable.</p><span class="tool-card-link">Open tool ↗</span></button>
+      <button class="tool-card" data-goto="grammar"><span class="tool-card-icon amber">✓</span><span class="tool-card-category">PROOFREAD</span><strong>Grammar checker</strong><p>Catch common mistakes in spacing, punctuation and repeated words.</p><span class="tool-card-link">Open tool ↗</span></button>
+      <button class="tool-card" data-goto="compare"><span class="tool-card-icon blue">⇄</span><span class="tool-card-category">COMPARE</span><strong>Draft comparison</strong><p>See which words were added or removed between two versions.</p><span class="tool-card-link">Open tool ↗</span></button>
+    </div></section>
+
+    <section class="why-section" id="why-octo"><div class="container why-inner"><div class="why-orb"><img src="./assets/octopus.svg" alt="AI Octopus mascot"></div><div><p class="eyebrow">WHY AI OCTOPUS?</p><h2>Eight arms.<br><em>One clear direction.</em></h2><p>Great writing takes curiosity, not a mysterious score. AI Octopus brings analysis, editing and checking into one thoughtful workspace. Keep control of your text and decide which suggestions actually help.</p><a class="btn btn-primary" href="#workspace">Start writing <span>↗</span></a></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><div class="identity"><span class="logo-wrap small-logo"><img src="./assets/octopus.svg" alt="" width="26" height="26"></span><span class="identity-name"><strong>AI <span>OCTOPUS</span></strong><small>Writing intelligence</small></span></div><p>Independent writing tools. Not affiliated with GPTZero, Winston AI, Copyleaks or Turnitin.</p><span>© 2026 AI Octopus</span></div></footer>
+</div>
+
+<div class="modal-backdrop hidden" id="auth-modal" role="presentation"><section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title"><button class="modal-close icon-button" id="auth-close" aria-label="Close dialog">✕</button><span class="modal-logo"><img src="./assets/octopus.svg" alt="" width="40" height="40"></span><p class="eyebrow">YOUR OCTOPUS ACCOUNT</p><h2 id="auth-title">Welcome back</h2><p id="auth-sub">Sign in to save and revisit third-party provider scans.</p><form id="auth-form"><div class="hidden" id="name-wrap"><label for="display-name">Display name</label><input id="display-name" maxlength="80" autocomplete="name" placeholder="Your name"></div><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required minlength="10" placeholder="At least 10 characters"><p class="form-error" id="auth-error" role="alert"></p><button class="btn btn-primary auth-submit" type="submit" id="auth-submit">Sign in <span>→</span></button></form><p class="auth-switch-row"><span id="auth-switch-copy">New to Octopus?</span> <button id="auth-switch">Create account</button></p><div class="auth-config"><details><summary>Connect an online API server for accounts and document scans</summary><label for="api-host">Backend address (HTTPS recommended)</label><div class="api-host-row"><input id="api-host" placeholder="https://api.example.com"><button class="btn btn-outline" id="save-api-host">Save</button></div></details></div><div id="auth-signed-in" class="hidden signed-in-info"><p id="signed-in-email"></p><button class="btn btn-outline" id="logout">Sign out</button></div></section></div>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./src.js"></script>
+</body>
+</html>
