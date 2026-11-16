@@ -5,18 +5,21 @@
 ### Eight arms. One desk.
 **Check if writing sounds like AI, rewrite it in a human voice, and get the small jobs done. Free, no install.**
 
-[![Live demo](https://img.shields.io/badge/▶_Live_demo-open_Octo-d6336c?style=for-the-badge)](https://dapperdude404.github.io/octo/)
+[![🚀 AI Octopus Version 2 Live Demo](https://img.shields.io/badge/Version_2_Live_Demo-OPEN_APP-00b89d?style=for-the-badge)](https://dapperdude404.github.io/octo/app/)
+[![Download latest release](https://img.shields.io/badge/Download-v2.4.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v2.4.0)
+
+**[▶ Open the Version 2 demo directly](https://dapperdude404.github.io/octo/app/)** · [Classic v1 demo](https://dapperdude404.github.io/octo/)
 
 ![Free](https://img.shields.io/badge/price-free-2ea44f)
 ![No install](https://img.shields.io/badge/install-none-blue)
 ![Single file](https://img.shields.io/badge/build-single_file-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Version](https://img.shields.io/badge/version-1.0.0-d6336c)
+![Latest version](https://img.shields.io/badge/latest-v2.4.0-00b89d)
 
 [![Stars](https://img.shields.io/github/stars/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/stargazers)
 [![Forks](https://img.shields.io/github/forks/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/fork)
 
-[Releases](https://github.com/dapperdude404/octo/releases) · [Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
+[🚀 Version 2 Live Demo](https://dapperdude404.github.io/octo/app/) · [Releases](https://github.com/dapperdude404/octo/releases) · [Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
 
 </div>
 
@@ -27,8 +30,20 @@ Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for stu
 
 **Developer:** [dapperdude404](https://github.com/dapperdude404) · **Portfolio:** [Aryan Sengar — AI & Engineering](https://ai-journey-engineering-portfolio.leafyhutch64.chatgpt.site)
 
+## 🚀 AI Octopus Version 2 — Instant Demo
+
+**[▶ Launch AI Octopus Version 2 in your browser](https://dapperdude404.github.io/octo/app/)**
+
+The Version 2 app is currently released as **v2.4.0**. The demo button opens the application directly. Try the AI pattern detector, clarity editor, grammar checker, and draft comparison. Browser-local tools need no account; optional online features connect to the deployed [Render API](https://ai-octopus-api-l83b.onrender.com/api/health). Third-party scans require provider credentials.
+
+| | Open |
+|---|---|
+| 🌐 **Version 2 live demo** | **[Launch application →](https://dapperdude404.github.io/octo/app/)** |
+| 📦 Latest release | [Download v2.4.0](https://github.com/dapperdude404/octo/releases/tag/v2.4.0) |
+| 🐙 Classic Version 1 | [Open classic demo](https://dapperdude404.github.io/octo/) |
+
 ## ⚡ Try it in 30 seconds
-1. Open the **[live demo](https://dapperdude404.github.io/octo/)**.
+1. Open the **[classic demo](https://dapperdude404.github.io/octo/)** for the original tools, or the **[Version 2 demo](https://dapperdude404.github.io/octo/app/)** for the latest workspace.
 2. On **AI detector**, click **Try a sample** then **Check text**.
 3. Click **AI remover**, paste the same text and rewrite it.
 4. Compare the score before and after.
