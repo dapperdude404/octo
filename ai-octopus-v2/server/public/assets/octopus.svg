@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="AI Octopus">
+ <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a6ffdd"/><stop offset="1" stop-color="#70dce8"/></linearGradient></defs>
+ <path d="M50 94 C36 90 27 103 29 114 C31 125 46 124 48 113 M59 98 C46 101 41 122 53 132 C64 141 76 130 70 121 M75 99 C65 111 67 133 80 137 C94 140 98 125 88 121 M92 99 C90 112 102 130 114 127 C125 125 123 111 116 109 M109 93 C125 89 135 101 130 114 C127 125 112 123 110 114" fill="none" stroke="url(#m)" stroke-width="12" stroke-linecap="round"/>
+ <path d="M42 74 C42 40 58 24 80 24 C102 24 118 40 118 74 C118 94 103 109 80 109 C57 109 42 94 42 74Z" fill="url(#m)"/>
+ <path d="M61 59 Q69 52 77 59 M86 59 Q94 52 102 59" stroke="#142338" stroke-width="5" stroke-linecap="round" fill="none"/>
+ <circle cx="66" cy="74" r="5.5" fill="#142338"/><circle cx="94" cy="74" r="5.5" fill="#142338"/>
+ <path d="M72 89 Q80 95 88 89" stroke="#142338" stroke-width="4" stroke-linecap="round" fill="none"/>
+ <circle cx="56" cy="82" r="5" fill="#f9b9cb" opacity=".55"/><circle cx="104" cy="82" r="5" fill="#f9b9cb" opacity=".55"/>
+ <path d="M122 35 L126 24 L130 35 L141 39 L130 43 L126 54 L122 43 L111 39Z" fill="#dac2ff"/>
+</svg>

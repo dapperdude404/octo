@@ -1,0 +1,8 @@
+{
+  "appId": "com.octoai.app",
+  "appName": "AI Octopus",
+  "webDir": "server/public",
+  "server": {
+    "androidScheme": "https"
+  }
+}
