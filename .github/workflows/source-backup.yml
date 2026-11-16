@@ -1,0 +1,31 @@
+name: Package AI Octopus source backup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/source-backup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout complete repository
+        uses: actions/checkout@v4
+      - name: Create source ZIP with commit identifier
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output=dist/AI-Octopus-source-${GITHUB_SHA:0:12}.zip HEAD
+          unzip -t dist/AI-Octopus-source-*.zip | tail -n 2
+          sha256sum dist/*.zip
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-octopus-source-backup
+          path: dist/*.zip
+          retention-days: 14
+          if-no-files-found: error
