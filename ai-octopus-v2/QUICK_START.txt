@@ -1,0 +1,34 @@
+AI OCTOPUS V2.1 - QUICK START (JAVA SCRIPT / NODE.JS)
+===================================================
+
+FIRST TRY (NO DATABASE, NO API KEYS):
+  1) Install current Node.js LTS from https://nodejs.org/
+  2) Windows: double-click start-preview.bat
+  3) Open http://localhost:4173 in a browser.
+  4) Paste at least 40 words and press Analyze writing.
+     Switch tabs to Clarity Editor, Grammar or Compare.
+
+FULL SERVER:
+  1) Read README.md, install Node.js and Docker.
+  2) On Windows run setup-windows.bat
+  3) Set a secure JWT_SECRET in .env, start Docker PostgreSQL.
+  4) npm run db:generate
+  5) npm run db:migrate
+  6) Run start-server.bat or npm start; open http://localhost:3000
+
+ANDROID:
+  Install Android Studio and SDK; after npm install run
+  android-setup.bat, then npm run android:open.
+  This ZIP does NOT contain a compiled APK.
+
+CLAUDE:
+  Open this entire project folder in Claude Code and ask it to read
+  CLAUDE.md before changing any files.
+
+GITHUB:
+  See GITHUB_PUBLISH.md. No repository has been published yet.
+
+WARNING:
+  AI-like scoring is a rules-based writing PATTERN estimate, NOT a
+  true probability of AI authorship. Paid provider APIs must be configured
+  separately and are not exercised in the offline preview.
