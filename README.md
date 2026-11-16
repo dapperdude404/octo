@@ -16,7 +16,7 @@
 [![Stars](https://img.shields.io/github/stars/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/stargazers)
 [![Forks](https://img.shields.io/github/forks/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/fork)
 
-[Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
+[Releases](https://github.com/dapperdude404/octo/releases) · [Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
 
 </div>
 
