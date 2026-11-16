@@ -9,6 +9,7 @@ function setText(value){$('editor').value=String(value);updateCounts();}
 function updateCounts(){const v=$('editor').value,w=countWords(v);$('word-count').textContent=`${w.toLocaleString()} words`;$('char-count').textContent=`${v.length.toLocaleString()} characters`;$('read-time').textContent=`${Math.max(1,Math.ceil(w/220))} min read`;}
 function apiBase(){return (localStorage.getItem('octo_api_base')||'').replace(/\/$/,'');}
 async function api(route,options={}){
+  if(location.hostname.endsWith('.github.io') && !apiBase()) throw Error('This online version needs a connected API server for accounts, PDF/DOCX and provider scans. Open Sign in, then Connect an online API server.');
   const headers={...options.headers};if(state.token)headers.Authorization=`Bearer ${state.token}`;
   if(options.body&&!(options.body instanceof FormData))headers['Content-Type']='application/json';
   let response;try{response=await fetch(`${apiBase()}${route}`,{...options,headers});}catch{throw Error('Could not reach the Octopus server. Set your API host if you are using Android.');}

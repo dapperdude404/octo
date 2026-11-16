@@ -5,22 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b111d">
   <meta name="description" content="AI Octopus — analyze writing patterns, improve clarity, review grammar and compare drafts in one focused workspace.">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/assets/octopus.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/octopus.svg" type="image/svg+xml">
   <title>AI Octopus — Your writing, in focus.</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div class="app-shell" id="app-shell">
   <header class="site-header">
     <div class="header-inner">
       <a class="identity" href="#top" aria-label="AI Octopus home">
-        <span class="logo-wrap"><img src="/assets/octopus.svg" width="36" height="36" alt=""></span>
+        <span class="logo-wrap"><img src="./assets/octopus.svg" width="36" height="36" alt=""></span>
         <span class="identity-name"><strong>AI <span>OCTOPUS</span></strong><small>Writing intelligence</small></span>
       </a>
       <nav class="desktop-nav" aria-label="Main navigation"><a href="#workspace">Workspace</a><a href="#toolbox">Tools</a><a href="#why-octo">Why Octopus</a></nav>
       <div class="header-actions">
-        <span class="status-dot" title="Local tools are available without an account">Local tools ready</span>
+        <span class="status-dot" title="Local tools are available without an account">Browser tools ready</span>
         <button class="icon-button" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">☀</button>
         <button class="account-button" id="account-button">Sign in <span aria-hidden="true">↗</span></button>
         <button class="icon-button menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
@@ -36,13 +36,13 @@
         <h1>Every word,<br><em>understood.</em></h1>
         <p class="hero-lead">An intelligent writing space to check patterns, sharpen ideas, and make every draft feel more like you.</p>
         <div class="hero-actions"><a class="btn btn-primary" href="#workspace">Open workspace <span aria-hidden="true">↗</span></a><a class="btn btn-link" href="#toolbox">Explore tools <span aria-hidden="true">→</span></a></div>
-        <div class="hero-trust"><span class="mini-avatars"><i>✦</i><i>✓</i><i>✎</i></span><span><strong>No account needed</strong><br>for local writing tools</span></div>
+        <div class="hero-trust"><span class="mini-avatars"><i>✦</i><i>✓</i><i>✎</i></span><span><strong>Online tools, no install needed</strong><br>Accounts, PDF/DOCX and provider scans need a connected server</span></div>
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="art-grid"></div><div class="art-glow"></div>
         <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
         <div class="float-panel panel-ai"><span class="float-icon">◈</span><span><strong>Pattern insights</strong><small>Understand your text</small></span><span class="float-check">✓</span></div>
-        <div class="octo-disc"><img src="/assets/octopus.svg" alt=""></div>
+        <div class="octo-disc"><img src="./assets/octopus.svg" alt=""></div>
         <div class="float-panel panel-clarity"><span class="float-icon">✧</span><span><strong>Clarity improved</strong><small>Write with purpose</small></span><span class="float-check">↗</span></div>
         <div class="art-badge">8 arms. <b>One smarter workflow.</b></div>
       </div>
@@ -131,13 +131,13 @@
       <button class="tool-card" data-goto="compare"><span class="tool-card-icon blue">⇄</span><span class="tool-card-category">COMPARE</span><strong>Draft comparison</strong><p>See which words were added or removed between two versions.</p><span class="tool-card-link">Open tool ↗</span></button>
     </div></section>
 
-    <section class="why-section" id="why-octo"><div class="container why-inner"><div class="why-orb"><img src="/assets/octopus.svg" alt="AI Octopus mascot"></div><div><p class="eyebrow">WHY AI OCTOPUS?</p><h2>Eight arms.<br><em>One clear direction.</em></h2><p>Great writing takes curiosity, not a mysterious score. AI Octopus brings analysis, editing and checking into one thoughtful workspace. Keep control of your text and decide which suggestions actually help.</p><a class="btn btn-primary" href="#workspace">Start writing <span>↗</span></a></div></div></section>
+    <section class="why-section" id="why-octo"><div class="container why-inner"><div class="why-orb"><img src="./assets/octopus.svg" alt="AI Octopus mascot"></div><div><p class="eyebrow">WHY AI OCTOPUS?</p><h2>Eight arms.<br><em>One clear direction.</em></h2><p>Great writing takes curiosity, not a mysterious score. AI Octopus brings analysis, editing and checking into one thoughtful workspace. Keep control of your text and decide which suggestions actually help.</p><a class="btn btn-primary" href="#workspace">Start writing <span>↗</span></a></div></div></section>
   </main>
-  <footer class="site-footer"><div class="container footer-inner"><div class="identity"><span class="logo-wrap small-logo"><img src="/assets/octopus.svg" alt="" width="26" height="26"></span><span class="identity-name"><strong>AI <span>OCTOPUS</span></strong><small>Writing intelligence</small></span></div><p>Independent writing tools. Not affiliated with GPTZero, Winston AI, Copyleaks or Turnitin.</p><span>© 2026 AI Octopus</span></div></footer>
+  <footer class="site-footer"><div class="container footer-inner"><div class="identity"><span class="logo-wrap small-logo"><img src="./assets/octopus.svg" alt="" width="26" height="26"></span><span class="identity-name"><strong>AI <span>OCTOPUS</span></strong><small>Writing intelligence</small></span></div><p>Independent writing tools. Not affiliated with GPTZero, Winston AI, Copyleaks or Turnitin.</p><span>© 2026 AI Octopus</span></div></footer>
 </div>
 
-<div class="modal-backdrop hidden" id="auth-modal" role="presentation"><section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title"><button class="modal-close icon-button" id="auth-close" aria-label="Close dialog">✕</button><span class="modal-logo"><img src="/assets/octopus.svg" alt="" width="40" height="40"></span><p class="eyebrow">YOUR OCTOPUS ACCOUNT</p><h2 id="auth-title">Welcome back</h2><p id="auth-sub">Sign in to save and revisit third-party provider scans.</p><form id="auth-form"><div class="hidden" id="name-wrap"><label for="display-name">Display name</label><input id="display-name" maxlength="80" autocomplete="name" placeholder="Your name"></div><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required minlength="10" placeholder="At least 10 characters"><p class="form-error" id="auth-error" role="alert"></p><button class="btn btn-primary auth-submit" type="submit" id="auth-submit">Sign in <span>→</span></button></form><p class="auth-switch-row"><span id="auth-switch-copy">New to Octopus?</span> <button id="auth-switch">Create account</button></p><div class="auth-config"><details><summary>Using the Android app or a separate API server?</summary><label for="api-host">Backend address (HTTPS recommended)</label><div class="api-host-row"><input id="api-host" placeholder="https://api.example.com"><button class="btn btn-outline" id="save-api-host">Save</button></div></details></div><div id="auth-signed-in" class="hidden signed-in-info"><p id="signed-in-email"></p><button class="btn btn-outline" id="logout">Sign out</button></div></section></div>
+<div class="modal-backdrop hidden" id="auth-modal" role="presentation"><section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title"><button class="modal-close icon-button" id="auth-close" aria-label="Close dialog">✕</button><span class="modal-logo"><img src="./assets/octopus.svg" alt="" width="40" height="40"></span><p class="eyebrow">YOUR OCTOPUS ACCOUNT</p><h2 id="auth-title">Welcome back</h2><p id="auth-sub">Sign in to save and revisit third-party provider scans.</p><form id="auth-form"><div class="hidden" id="name-wrap"><label for="display-name">Display name</label><input id="display-name" maxlength="80" autocomplete="name" placeholder="Your name"></div><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required minlength="10" placeholder="At least 10 characters"><p class="form-error" id="auth-error" role="alert"></p><button class="btn btn-primary auth-submit" type="submit" id="auth-submit">Sign in <span>→</span></button></form><p class="auth-switch-row"><span id="auth-switch-copy">New to Octopus?</span> <button id="auth-switch">Create account</button></p><div class="auth-config"><details><summary>Connect an online API server for accounts and document scans</summary><label for="api-host">Backend address (HTTPS recommended)</label><div class="api-host-row"><input id="api-host" placeholder="https://api.example.com"><button class="btn btn-outline" id="save-api-host">Save</button></div></details></div><div id="auth-signed-in" class="hidden signed-in-info"><p id="signed-in-email"></p><button class="btn btn-outline" id="logout">Sign out</button></div></section></div>
 <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="/src.js"></script>
+<script type="module" src="./src.js"></script>
 </body>
 </html>
