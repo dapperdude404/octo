@@ -6,7 +6,7 @@
 **Check if writing sounds like AI, rewrite it in a human voice, and get the small jobs done. Free, no install.**
 
 [![🚀 AI Octopus Version 2 Live Demo](https://img.shields.io/badge/Version_2_Live_Demo-OPEN_APP-00b89d?style=for-the-badge)](https://dapperdude404.github.io/octo/app/)
-[![Download latest release](https://img.shields.io/badge/Download-v2.4.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v2.4.0)
+[![Download latest release](https://img.shields.io/badge/Download-v2.5.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v2.5.0)
 
 **[▶ Open the Version 2 demo directly](https://dapperdude404.github.io/octo/app/)** · [Classic v1 demo](https://dapperdude404.github.io/octo/)
 
@@ -14,7 +14,7 @@
 ![No install](https://img.shields.io/badge/install-none-blue)
 ![Single file](https://img.shields.io/badge/build-single_file-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Latest version](https://img.shields.io/badge/latest-v2.4.0-00b89d)
+![Latest version](https://img.shields.io/badge/latest-v2.5.0-00b89d)
 
 [![Stars](https://img.shields.io/github/stars/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/stargazers)
 [![Forks](https://img.shields.io/github/forks/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/fork)
@@ -30,16 +30,24 @@ Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for stu
 
 **Developer:** [dapperdude404](https://github.com/dapperdude404) · **Portfolio:** [Aryan Sengar — AI & Engineering](https://ai-journey-engineering-portfolio.leafyhutch64.chatgpt.site)
 
+## ✨ What's new in v2.5.0
+
+**Document Studio** imports PDF, DOCX and TXT into editable text, then exports DOCX, TXT, HTML, Markdown and JSON. A browser print dialog supports **Save as PDF**. PDF conversion extracts selectable text and does not preserve complex layouts; scanned PDFs still need OCR.
+
+**Visual themes:** Aurora, Plasma and Solar palettes, plus independent light/dark mode. Your selection is remembered on your device.
+
+[Launch Document Studio](https://dapperdude404.github.io/octo/app/#workspace) · [Read release notes](https://github.com/dapperdude404/octo/releases/tag/v2.5.0)
+
 ## 🚀 AI Octopus Version 2 — Instant Demo
 
 **[▶ Launch AI Octopus Version 2 in your browser](https://dapperdude404.github.io/octo/app/)**
 
-The Version 2 app is currently released as **v2.4.0**. The demo button opens the application directly. Try the AI pattern detector, clarity editor, grammar checker, and draft comparison. Browser-local tools need no account; optional online features connect to the deployed [Render API](https://ai-octopus-api-l83b.onrender.com/api/health). Third-party scans require provider credentials.
+The Version 2 app is currently released as **v2.5.0**. The demo button opens the application directly. Try the AI pattern detector, clarity editor, grammar checker, and draft comparison. Browser-local tools need no account; optional online features connect to the deployed [Render API](https://ai-octopus-api-l83b.onrender.com/api/health). Third-party scans require provider credentials.
 
 | | Open |
 |---|---|
 | 🌐 **Version 2 live demo** | **[Launch application →](https://dapperdude404.github.io/octo/app/)** |
-| 📦 Latest release | [Download v2.4.0](https://github.com/dapperdude404/octo/releases/tag/v2.4.0) |
+| 📦 Latest release | [Download v2.5.0](https://github.com/dapperdude404/octo/releases/tag/v2.5.0) |
 | 🐙 Classic Version 1 | [Open classic demo](https://dapperdude404.github.io/octo/) |
 
 ## ⚡ Try it in 30 seconds

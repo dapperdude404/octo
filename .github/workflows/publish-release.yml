@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Semantic version without v (example 2.4.1)'
+        description: 'Semantic version without v (example 2.5.1)'
         required: true
-        default: '2.4.0'
+        default: '2.5.0'
         type: string
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
         id: version
         shell: bash
         env:
-          REQUESTED_VERSION: ${{ inputs.version || '2.4.0' }}
+          REQUESTED_VERSION: ${{ inputs.version || '2.5.0' }}
         run: |
           if [[ ! "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Only numeric SemVer supported"; exit 1; fi
           echo "tag=v$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
@@ -75,5 +75,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists; skipping rather than overwriting existing assets"
           else
-            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "AI Octopus $TAG" --notes-file RELEASE_NOTES_v2.4.0.md
+            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "AI Octopus $TAG" --notes-file RELEASE_NOTES_v2.5.0.md
           fi

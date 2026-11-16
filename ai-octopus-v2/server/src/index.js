@@ -17,6 +17,7 @@ import { submitCopyleaks, copyleaksWebhook } from './providers/copyleaks.js';
 import { localAnalyze, improveClarity, grammarReview } from './analysis.js';
 import mammoth from 'mammoth';
 import pdfParse from 'pdf-parse';
+import {makeDocx,safeDocumentName} from './documents.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,7 +38,7 @@ const registerSchema = z.object({ email: z.string().email().max(254), password: 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1).max(128) });
 const scanSchema = z.object({ text: z.string().min(40).max(150000), title: z.string().trim().max(160).optional(), providers: z.array(z.enum(['gptzero','winston','copyleaks'])).min(1).max(3), kind: z.enum(['ai','plagiarism']).default('ai') });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'octo-ai-api', version: '2.4.0' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'octo-ai-api', version: '2.5.0' }));
 app.post('/api/auth/register', authLimiter, async (req, res, next) => {
   try {
     const input = registerSchema.parse(req.body);
@@ -74,6 +75,19 @@ app.post('/api/documents/extract', uploadLimiter, upload.single('file'), async (
     if (!text.trim()) return res.status(422).json({ error: 'No selectable text was found. Scanned PDFs need OCR before analysis.' });
     res.json({ filename: req.file.originalname, text: text.slice(0, 150000), truncated: text.length > 150000 });
   } catch (error) { next(error); }
+});
+
+const documentExportSchema = z.object({ text: z.string().min(1).max(150000), filename: z.string().max(70).optional() });
+const exportLimiter = rateLimit({windowMs:60_000,limit:12,standardHeaders:'draft-8',legacyHeaders:false});
+app.post('/api/documents/export/docx', exportLimiter, async (req,res,next)=>{
+  try {
+    const {text,filename}=documentExportSchema.parse(req.body);
+    const buffer=await makeDocx(text);
+    res.set('Content-Type','application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.set('Content-Disposition',`attachment; filename="${safeDocumentName(filename)}.docx"`);
+    res.set('Cache-Control','no-store');
+    res.send(buffer);
+  }catch(error){next(error);}
 });
 
 app.post('/api/scans', requireAuth, async (req, res, next) => {

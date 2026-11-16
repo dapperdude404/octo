@@ -64,3 +64,28 @@ body{background:radial-gradient(ellipse 620px 450px at 89% 5%,#6458e82a,transpar
 @media(max-width:1000px){.hero{padding-top:54px;padding-bottom:58px;gap:24px}.release-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.hero{padding-top:42px;padding-bottom:46px}.container{padding-left:20px;padding-right:20px}.release-section{padding-top:50px;padding-bottom:55px}.release-grid{grid-template-columns:1fr;gap:12px}.release-tile{min-height:0;padding:23px}.workspace-frame{border-radius:19px}}
 @media(prefers-reduced-motion:reduce){.tool-card,.release-tile{transition:none}.tool-card:hover,.release-tile:hover{transform:none}}
+
+/* AI Octopus v2.5 — original themes, glass export tiles and tighter mobile experience */
+:root[data-palette="plasma"]{--mint:#b7a0ff;--violet:#f2a3db;--mint-dark:#322254;--blue:#91d4ff}
+:root[data-palette="solar"]{--mint:#ffcf8f;--violet:#f6a8a0;--mint-dark:#4a2d20;--blue:#a0d8ed}
+:root.light[data-palette="plasma"]{--mint:#6542b8;--violet:#a92e80;--mint-dark:#f1eafe;--blue:#2168a6}
+:root.light[data-palette="solar"]{--mint:#986018;--violet:#ab4f4c;--mint-dark:#fff0d0;--blue:#286c87}
+.palette-select{max-width:122px;min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:12px;color:var(--ink);background:color-mix(in srgb,var(--surface2) 70%,transparent);font:700 12px var(--font);outline-offset:3px;cursor:pointer}
+.palette-select option{background:var(--surface);color:var(--ink)}
+.btn-primary{background:linear-gradient(120deg,color-mix(in srgb,var(--mint) 77%,white),var(--mint));color:#102234}
+:root.light .btn-primary{color:#142335}
+.doc-studio-intro{position:relative;overflow:hidden;isolation:isolate;border:1px solid var(--line);border-radius:22px;padding:27px 24px;margin-bottom:20px;background:radial-gradient(circle at 89% 16%,color-mix(in srgb,var(--violet) 24%,transparent),transparent 58%),linear-gradient(130deg,var(--surface2),var(--surface))}
+.doc-studio-intro .eyebrow{font-size:10px;letter-spacing:.14em;margin-bottom:7px}.doc-studio-intro h3{font-size:clamp(24px,3vw,35px);line-height:1.11;letter-spacing:-.045em;margin:7px 0 13px}
+.doc-studio-intro h3 em{font-style:normal;color:var(--mint)}.doc-studio-intro p:last-child{color:var(--muted);font-size:13px;max-width:34ch;margin-bottom:0}
+.doc-studio-orb{position:absolute;right:20px;top:17px;display:grid;place-items:center;width:66px;height:66px;border-radius:20px;border:1px solid color-mix(in srgb,var(--mint) 42%,transparent);background:color-mix(in srgb,var(--mint) 13%,transparent);color:var(--mint);font-size:35px;transform:rotate(8deg)}
+.doc-stats{display:flex;flex-wrap:wrap;gap:15px;margin:12px 0 18px;color:var(--muted);font-size:12px}
+.doc-export-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.doc-export-tile{text-align:left;display:flex;flex-direction:column;gap:5px;min-height:123px;padding:16px;border:1px solid var(--line);border-radius:17px;background:color-mix(in srgb,var(--surface2) 68%,transparent);color:var(--ink);transition:border-color .2s,transform .2s,background .2s}
+.doc-export-tile:hover,.doc-export-tile:focus-visible{transform:translateY(-3px);border-color:var(--mint);background:color-mix(in srgb,var(--surface3) 73%,transparent)}
+.doc-export-tile strong{font-size:13px}.doc-export-tile small{font-size:11px;color:var(--muted);line-height:1.4}
+.doc-export-icon{display:grid;place-items:center;height:34px;width:34px;margin-bottom:3px;border-radius:11px;color:var(--mint);background:color-mix(in srgb,var(--mint) 14%,transparent);font-size:18px;font-weight:800}
+.doc-export-status{padding:11px 14px;border-radius:12px;border:1px solid var(--line-soft);background:var(--surface2);font-size:12px;color:var(--muted);margin:14px 0 12px}
+@media(max-width:1050px){.palette-select{max-width:96px;font-size:11px}}
+@media(max-width:650px){.palette-select{max-width:85px;padding:0 5px}.doc-export-grid{gap:9px}.doc-export-tile{min-height:110px;padding:13px}.doc-studio-intro{padding:23px 18px}}
+@media(max-width:390px){.palette-select{max-width:60px}.doc-export-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.doc-export-tile{transition:none}.doc-export-tile:hover{transform:none}}

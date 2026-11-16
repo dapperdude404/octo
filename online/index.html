@@ -21,7 +21,7 @@
       <nav class="desktop-nav" aria-label="Main navigation"><a href="#workspace">Workspace</a><a href="#toolbox">Tools</a><a href="#why-octo">Why Octopus</a><a href="#developer">Developer</a><a href="#releases">Releases</a></nav>
       <div class="header-actions">
         <span class="status-dot" title="Local tools are available without an account">Browser tools ready</span>
-        <button class="icon-button" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">☀</button>
+        <select class="palette-select" id="theme-palette" aria-label="Color theme" title="Choose color theme"><option value="aurora">✦ Aurora</option><option value="plasma">◈ Plasma</option><option value="solar">☀ Solar</option></select><button class="icon-button" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">☀</button>
         <button class="account-button" id="account-button">Sign in <span aria-hidden="true">↗</span></button>
         <button class="icon-button menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">☰</button>
       </div>
@@ -30,13 +30,12 @@
   </header>
 
   <main id="top">
-    <div role="status" style="max-width:1100px;margin:16px auto 0;padding:12px 18px;border:1px solid #53667a;border-radius:12px;font-size:14px;line-height:1.5">🌐 <strong>Online browser edition:</strong> Writing analysis, grammar, clarity, and draft comparison run in your browser. Accounts, PDF/DOCX extraction, and paid AI-provider scans require a separate hosted backend.</div>
     <section class="hero container">
       <div class="hero-content">
         <p class="eyebrow"><span class="eyebrow-line"></span> MEET YOUR WRITING CO-PILOT <span class="eyebrow-star">✳</span></p>
         <h1>Every word,<br><em>understood.</em></h1>
         <p class="hero-lead">An intelligent writing space to check patterns, sharpen ideas, and make every draft feel more like you.</p>
-        <div class="hero-actions"><a class="btn btn-primary" href="#workspace">Open workspace <span aria-hidden="true">↗</span></a><a class="btn btn-link" href="#toolbox">Explore tools <span aria-hidden="true">→</span></a></div>
+        <div class="hero-actions"><a class="btn btn-primary" href="#workspace">Open workspace <span aria-hidden="true">↗</span></a><a class="btn btn-link" href="#workspace" data-goto="documents">Document Studio <span aria-hidden="true">→</span></a></div>
         <div class="hero-trust"><span class="mini-avatars"><i>✦</i><i>✓</i><i>✎</i></span><span><strong>Online tools, no install needed</strong><br>Accounts, PDF/DOCX and provider scans need a connected server</span></div>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -49,7 +48,7 @@
       </div>
     </section>
 
-    <section class="features-strip" aria-label="Features"><div class="container strip-inner"><span>◈ <b>Pattern analysis</b></span><span>✧ <b>Clarity editor</b></span><span>✓ <b>Grammar review</b></span><span>⇄ <b>Draft comparison</b></span><span>⌘ <b>Document tools</b></span></div></section>
+    <section class="features-strip" aria-label="Features"><div class="container strip-inner"><span>◈ <b>Pattern analysis</b></span><span>✧ <b>Clarity editor</b></span><span>✓ <b>Grammar review</b></span><span>⇄ <b>Draft comparison</b></span><span>▤ <b>Document Studio · NEW</b></span></div></section>
 
     <section class="workspace-section container" id="workspace">
       <div class="section-heading"><div><p class="eyebrow">YOUR CREATIVE CONTROL CENTER</p><h2>The Octopus <em>workspace</em></h2><p>One place, multiple ways to make progress.</p></div><div class="section-heading-side"><span class="live-pill"><span class="pulse"></span> LOCAL ANALYSIS</span><span class="hint">No account required</span></div></div>
@@ -59,6 +58,7 @@
           <button class="tool-tab" data-tab="editor" role="tab" aria-selected="false"><span>✧</span> Clarity Editor</button>
           <button class="tool-tab" data-tab="grammar" role="tab" aria-selected="false"><span>✓</span> Grammar</button>
           <button class="tool-tab" data-tab="compare" role="tab" aria-selected="false"><span>⇄</span> Compare</button>
+          <button class="tool-tab" data-tab="documents" role="tab" aria-selected="false"><span>▤</span> Documents</button>
           <button class="tool-tab" data-tab="providers" role="tab" aria-selected="false"><span>⌘</span> Provider Scans</button>
           <button class="tool-tab" data-tab="history" role="tab" aria-selected="false"><span>◷</span> History</button>
         </div>
@@ -106,7 +106,23 @@
             <div class="compare-results" id="compare-results"><p class="muted">Highlights will appear here after comparing two drafts.</p></div>
           </div>
 
-          <div class="results-column tool-view hidden" id="providers-view">
+          <div class="results-column tool-view hidden" id="documents-view">
+<div class="pane-header"><div><div class="pane-icon dark-icon">▤</div><div><h3>Document Studio</h3><p>Import text, export your way</p></div></div><span class="result-tag">NEW · V2.5</span></div>
+<div class="doc-studio-intro"><div class="doc-studio-orb" aria-hidden="true">▤</div><p class="eyebrow">YOUR WORDS, YOUR FILE</p><h3>One draft.<br><em>Many formats.</em></h3><p>Upload a PDF, DOCX or TXT file on the left, review the editable text, then choose a format.</p></div>
+<label class="field-label" for="doc-title">Export file name</label><input id="doc-title" class="form-control" maxlength="70" placeholder="my-document" value="ai-octopus-draft">
+<div class="doc-stats"><span id="doc-word-stat">0 words</span><span id="doc-char-stat">0 characters</span></div>
+<div class="doc-export-grid" aria-label="Document export formats">
+<button type="button" class="doc-export-tile" data-export="docx"><span class="doc-export-icon">W</span><strong>Word DOCX</strong><small>Editable document</small></button>
+<button type="button" class="doc-export-tile" data-export="pdf"><span class="doc-export-icon">▣</span><strong>PDF</strong><small>Print / Save as PDF</small></button>
+<button type="button" class="doc-export-tile" data-export="txt"><span class="doc-export-icon">≡</span><strong>Text TXT</strong><small>Plain text</small></button>
+<button type="button" class="doc-export-tile" data-export="html"><span class="doc-export-icon">⟨⟩</span><strong>HTML</strong><small>Formatted web page</small></button>
+<button type="button" class="doc-export-tile" data-export="md"><span class="doc-export-icon">#</span><strong>Markdown</strong><small>Text as Markdown</small></button>
+<button type="button" class="doc-export-tile" data-export="json"><span class="doc-export-icon">{ }</span><strong>JSON</strong><small>Text and metadata</small></button></div>
+<p id="doc-export-status" class="doc-export-status" role="status" aria-live="polite">Choose an export format to continue.</p>
+<p class="helper-text">PDF/DOCX imports and Word exports use the connected Render server. The PDF importer extracts selectable text, not page layout. Scanned PDFs need OCR. Saving as PDF opens your browser's print dialog.</p>
+</div>
+
+<div class="results-column tool-view hidden" id="providers-view">
             <div class="pane-header"><div><div class="pane-icon dark-icon">⌘</div><div><h3>Provider scans</h3><p>Optional third-party checks via API</p></div></div><span class="result-tag">ACCOUNT + KEYS</span></div>
             <div class="provider-info"><span>🔒</span><div><strong>Connected accounts are optional</strong><p>Choose a service only if you've configured its server-side API key. Some providers charge per scan and may process submitted text externally.</p></div></div>
             <label class="field-label" for="scan-kind">Scan type</label><select id="scan-kind" class="form-control"><option value="ai">AI text classification</option><option value="plagiarism">Plagiarism / similarity</option></select>
@@ -121,7 +137,7 @@
             <div id="history-results"><div class="empty-insight"><span>◷</span><p>Sign in to see scans saved to your account.</p></div></div>
           </div>
         </div>
-        <div class="workspace-footer"><div><span class="workspace-footer-icon">◎</span><span><b>Built for careful writing</b><small>Original AI Octopus tools, not a certification of human authorship.</small></span></div><span class="workspace-footer-version">OCTO V2.4 · OPEN WORKSPACE</span></div>
+        <div class="workspace-footer"><div><span class="workspace-footer-icon">◎</span><span><b>Built for careful writing</b><small>Original AI Octopus tools, not a certification of human authorship.</small></span></div><span class="workspace-footer-version">OCTO V2.5 · DOCUMENT STUDIO</span></div>
       </div>
     </section>
 
@@ -130,7 +146,7 @@
       <button class="tool-card" data-goto="editor"><span class="tool-card-icon mint">✧</span><span class="tool-card-category">REFINE</span><strong>Clarity editor</strong><p>Cut wordy expressions and keep your message direct and readable.</p><span class="tool-card-link">Open tool ↗</span></button>
       <button class="tool-card" data-goto="grammar"><span class="tool-card-icon amber">✓</span><span class="tool-card-category">PROOFREAD</span><strong>Grammar checker</strong><p>Catch common mistakes in spacing, punctuation and repeated words.</p><span class="tool-card-link">Open tool ↗</span></button>
       <button class="tool-card" data-goto="compare"><span class="tool-card-icon blue">⇄</span><span class="tool-card-category">COMPARE</span><strong>Draft comparison</strong><p>See which words were added or removed between two versions.</p><span class="tool-card-link">Open tool ↗</span></button>
-    </div></section>
+    <button class="tool-card" data-goto="documents"><span class="tool-card-icon mint">▤</span><span class="tool-card-category">NEW · DOCUMENT STUDIO</span><strong>PDF &amp; Word workflows</strong><p>Import PDFs and DOCX files. Export to Word, HTML, TXT and more.</p><span class="tool-card-link">Open studio ↗</span></button></div></section>
 
     <section class="why-section" id="why-octo"><div class="container why-inner"><div class="why-orb"><img src="./assets/octopus.svg" alt="AI Octopus mascot"></div><div><p class="eyebrow">WHY AI OCTOPUS?</p><h2>Eight arms.<br><em>One clear direction.</em></h2><p>Great writing takes curiosity, not a mysterious score. AI Octopus brings analysis, editing and checking into one thoughtful workspace. Keep control of your text and decide which suggestions actually help.</p><a class="btn btn-primary" href="#workspace">Start writing <span>↗</span></a></div></div></section>
 
