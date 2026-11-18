@@ -6,7 +6,7 @@
 1. **Natural academic editor:** side-by-side original/revised text; paragraph or span-level suggested changes; accept/reject/restore; immutable original; IEEE/APA/general presets. Changes must preserve citations, equations, figures, and numeric findings, and explain their rationale.
 2. **Academic quality:** eight criteria weighted 20/20/15/15/10/10/5/5. Never claim a complete 100-point assessment until all eight are evidence-backed. Initial `research/quality.js` exposes **partial heuristic signals only**, with missing dimensions clearly marked. Target 95–100 is an editorial aspiration, never a promised result.
 3. **AI writing:** distinct provider responses for GPTZero/Winston/Copyleaks and Turnitin **only if formally authorized**. Record provider, scan date, score definition, provenance, error status, limits. Local heuristic scores are not AI-authorship probabilities.
-4. **Similarity:** exact duplicate detection can run locally; external source matching, reference verification and similarity percentages require licensed, authorized data access. Do not invent corpus matches.
+4. **Similarity:** provide distinct **New Plagiarism Review** (local duplicate/reference matching) and **New Turnitin Scan** (only enabled with approved official integration) actions. Local exact duplicate detection can run without external services; external source matching, reference verification and similarity percentages require licensed, authorized data access. Never invent corpus matches or percentages. Show status, source scope, timestamp, and limitations for every scan.
 5. **IEEE export:** official conference/journal template selected by user; editable DOCX and PDF with two-column formatting, equations, captions, figures, references, and preflight checks. Current v2.5 DOCX export is plain text; it does not satisfy this requirement.
 6. **Research validation:** accept safe bounded uploads for datasets/logs/evaluation reports/model manifests; derive metrics only from actual confusion matrices or validated predictions/ground truth. Label each result VERIFIED, REPORTED, MISSING or INCONSISTENT. No untrusted model execution.
 7. **UI:** responsive research dashboard, editable diff, project history, provider status, quality panel, IEEE exports, validation report, accessible keyboard support and light/dark themes.
@@ -18,7 +18,7 @@
 - `server/src/research/quality.js`: initial partial quality-signal engine (implemented on this branch)
 - `server/src/research/revisions.js`: structured revision suggestions and individual accept/reject (planned)
 - `server/src/research/citations.js`: parsing, attribution warnings and references (planned)
-- `server/src/research/similarity.js`: local duplicate analysis and authorized provider adapters (planned)
+- `server/src/research/similarity.js`: local exact duplicate and user-supplied reference analysis with explicit Turnitin-unavailable status (initial module added; official provider adapter and UI planned)
 - `server/src/research/validation.js`: metric recomputation with provenance labels (planned)
 - `server/src/research/ieee-export.js`: official-template document export (planned)
 - `web/research` and mirrored `app`: research dashboard and editor (planned)
@@ -37,7 +37,7 @@
 - [ ] Implement reviewable editing UI and individual suggestion actions
 - [ ] Validate score definitions and full 100-point coverage
 - [ ] Implement authorized provider adapters and failure handling
-- [ ] Implement verified similarity/citation checks
+- [x] Add initial local duplicate/reference comparison with tests (not a plagiarism database scan)\n- [ ] Add New Plagiarism Review / New Turnitin Scan UI and authorized provider adapter\n- [ ] Implement verified external similarity/citation checks
 - [ ] Implement official IEEE template export and rendering tests
 - [ ] Implement research validation with provenance and recomputation
 - [ ] Run automated tests and security/dependency checks
