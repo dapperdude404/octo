@@ -10,9 +10,11 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String
+  passwordHash String?
   displayName  String?
   createdAt    DateTime @default(now())
+  oauthAccounts OAuthAccount[]
+  oauthTickets  OAuthTicket[]
   scans        Scan[]
 }
 
@@ -33,4 +35,25 @@ model Scan {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, createdAt])
   @@index([providerId])
+}
+
+model OAuthAccount {
+  id String @id @default(cuid())
+  provider String
+  providerUserId String
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  createdAt DateTime @default(now())
+  @@unique([provider,providerUserId])
+  @@index([userId])
+}
+
+model OAuthTicket {
+  id String @id @default(cuid())
+  codeHash String @unique
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
 }
