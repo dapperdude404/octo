@@ -21,6 +21,10 @@ import pdfParse from 'pdf-parse';
 import {makeDocx,safeDocumentName} from './documents.js';
 
 const app = express();
+// Render terminates HTTPS at its reverse proxy. Trust only the immediate proxy hop
+// so express-rate-limit can derive the client IP from X-Forwarded-For.
+// Revalidate this hop count if the deployment's proxy topology changes.
+app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../public');
 app.disable('x-powered-by');
