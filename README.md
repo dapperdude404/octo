@@ -2,8 +2,8 @@
 
 # 🐙 Octo
 
-### Eight arms. One desk.
-**Check if writing sounds like AI, rewrite it in a human voice, and get the small jobs done. Free, no install.**
+### Writing intelligence · Document Studio · Academic research tools
+**A free, open-source writing and document workspace with transparent analysis and an evolving academic research toolkit.**
 
 [![🚀 AI Octopus Live Demo](https://img.shields.io/badge/Live_Web_Demo-OPEN_APP-00b89d?style=for-the-badge)](https://dapperdude404.github.io/octo/app/)
 [![Download latest release](https://img.shields.io/badge/Download-v5.0.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v5.0.0)
@@ -12,7 +12,6 @@
 
 ![Free](https://img.shields.io/badge/price-free-2ea44f)
 ![No install](https://img.shields.io/badge/install-none-blue)
-![Single file](https://img.shields.io/badge/build-single_file-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Latest version](https://img.shields.io/badge/latest-v5.0.0-00b89d)
 
@@ -44,7 +43,23 @@ Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for stu
 
 **Visual themes:** Aurora, Plasma and Solar palettes, plus independent light/dark mode. Your selection is remembered on your device.
 
-[Launch Document Studio](https://dapperdude404.github.io/octo/app/#workspace) · [Read release notes](https://github.com/dapperdude404/octo/releases/tag/v5.0.0)
+[Launch Document Studio](https://dapperdude404.github.io/octo/app/#workspace) · [Read original v2.5 release notes](https://github.com/dapperdude404/octo/releases/tag/v2.5.0)
+
+## 🧪 V5 academic research feature status
+
+| Research capability | Status | Notes |
+|---|---|---|
+| Explainable academic quality indicators | Source module available | Partial heuristic assessment; scientific accuracy and originality are not verified |
+| Revision suggestions and accept/reject logic | Source module available | Research editor UI not yet connected |
+| Local plagiarism review | Source module available | Exact duplicate and user-provided reference matching only; no external corpus |
+| Citation/reference checks | Source module available | Structural warnings, not independent source verification |
+| Research metric validation | Source module available | Metrics recomputed from supplied confusion matrices; not model retraining |
+| GPTZero, Winston AI, Copyleaks | Credential-dependent | Provider results must be reported separately from local heuristics |
+| Turnitin scan | Not available | Requires officially authorized institutional or partner integration |
+| IEEE two-column DOCX/PDF generator | Planned | Official target journal/conference template and export tests required |
+| Full V5 web/Android research UI | Planned | Existing live demo remains the Document Studio interface |
+
+**Accuracy and transparency:** A local writing-pattern score is not a verified probability of AI authorship. A local text match is not a licensed plagiarism report. No experimental result is claimed without supporting data.
 
 ## 🚀 AI Octopus — Current Live Demo
 
@@ -54,11 +69,11 @@ The current browser demo provides the **v2.5 Document Studio-era interface**; V5
 
 | | Open |
 |---|---|
-| 🌐 **Version 2 live demo** | **[Launch application →](https://dapperdude404.github.io/octo/app/)** |
+| 🌐 **Current live demo** | **[Launch application →](https://dapperdude404.github.io/octo/app/)** |
 | 📦 Latest release | [Download v5.0.0](https://github.com/dapperdude404/octo/releases/tag/v5.0.0) |
 | 🐙 Classic Version 1 | [Open classic demo](https://dapperdude404.github.io/octo/) |
 
-## ⚡ Try it in 30 seconds
+## ⚡ Try the live tools in 30 seconds
 1. Open the **[classic demo](https://dapperdude404.github.io/octo/)** for the original tools, or the **[Version 2 demo](https://dapperdude404.github.io/octo/app/)** for the latest workspace.
 2. On **AI detector**, click **Try a sample** then **Check text**.
 3. Click **AI remover**, paste the same text and rewrite it.
@@ -119,7 +134,7 @@ Starts your camera and draws boxes around faces. It only **counts** faces and do
 
 </details>
 
-## 🧠 How the detector works
+## 🧠 How the local writing-pattern detector works
 
 Octo does not use a hidden AI model. It looks for patterns that AI writing often shows.
 
@@ -132,9 +147,9 @@ flowchart LR
     C --> E
     D --> E
     E --> F{Score}
-    F -->|0 to 29| G[Likely human]
-    F -->|30 to 59| H[Mixed signals]
-    F -->|60 to 100| I[Likely AI-written]
+    F -->|0 to 29| G[Lower pattern score]
+    F -->|30 to 59| H[Moderate pattern score]
+    F -->|60 to 100| I[Higher pattern score]
     I --> J[AI remover rewrites it]
 ```
 
