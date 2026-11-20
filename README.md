@@ -5,21 +5,21 @@
 ### Eight arms. One desk.
 **Check if writing sounds like AI, rewrite it in a human voice, and get the small jobs done. Free, no install.**
 
-[![🚀 AI Octopus Version 2 Live Demo](https://img.shields.io/badge/Version_2_Live_Demo-OPEN_APP-00b89d?style=for-the-badge)](https://dapperdude404.github.io/octo/app/)
-[![Download latest release](https://img.shields.io/badge/Download-v2.5.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v2.5.0)
+[![🚀 AI Octopus Live Demo](https://img.shields.io/badge/Live_Web_Demo-OPEN_APP-00b89d?style=for-the-badge)](https://dapperdude404.github.io/octo/app/)
+[![Download latest release](https://img.shields.io/badge/Download-v5.0.0_Release-8467e8?style=for-the-badge)](https://github.com/dapperdude404/octo/releases/tag/v5.0.0)
 
-**[▶ Open the Version 2 demo directly](https://dapperdude404.github.io/octo/app/)** · [Classic v1 demo](https://dapperdude404.github.io/octo/)
+**[▶ Open the current live demo directly](https://dapperdude404.github.io/octo/app/)** · [Classic v1 demo](https://dapperdude404.github.io/octo/)
 
 ![Free](https://img.shields.io/badge/price-free-2ea44f)
 ![No install](https://img.shields.io/badge/install-none-blue)
 ![Single file](https://img.shields.io/badge/build-single_file-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Latest version](https://img.shields.io/badge/latest-v2.5.0-00b89d)
+![Latest version](https://img.shields.io/badge/latest-v5.0.0-00b89d)
 
 [![Stars](https://img.shields.io/github/stars/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/stargazers)
 [![Forks](https://img.shields.io/github/forks/dapperdude404/octo?style=social)](https://github.com/dapperdude404/octo/fork)
 
-[🚀 Version 2 Live Demo](https://dapperdude404.github.io/octo/app/) · [Releases](https://github.com/dapperdude404/octo/releases) · [Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
+[🚀 Live Demo](https://dapperdude404.github.io/octo/app/) · [Releases](https://github.com/dapperdude404/octo/releases) · [Try it](#-try-it-in-30-seconds) · [Tools](#-the-eight-arms-and-more) · [How it works](#-how-the-detector-works) · [Run it](#-run-it) · [FAQ](#-faq) · [Contribute](#-contribute)
 
 </div>
 
@@ -30,24 +30,32 @@ Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for stu
 
 **Developer:** [dapperdude404](https://github.com/dapperdude404) · **Portfolio:** [Aryan Sengar — AI & Engineering](https://ai-journey-engineering-portfolio.leafyhutch64.chatgpt.site)
 
-## ✨ What's new in v2.5.0
+## ✨ Latest release: v5.0.0 — Academic Research Studio foundation
+
+**GitHub release v5.0.0 is published.** It includes initial research-oriented code modules: partial explainable academic quality indicators, structured revision suggestions, local duplicate/reference matching, citation checks, and metrics recomputed from supplied confusion matrices. These are **development foundations**, not a complete end-to-end research studio in the live demo.
+
+**Not yet available in the live demo:** full side-by-side research editor, official IEEE two-column DOCX/PDF generation, licensed Turnitin scanning, or verified external plagiarism database matching. Turnitin requires an officially authorized integration. Local writing signals must not be treated as verified authorship probabilities.
+
+[📦 Download v5.0.0](https://github.com/dapperdude404/octo/releases/tag/v5.0.0) · [📋 V5 scope and checklist](ACADEMIC_RESEARCH_STUDIO_V5.md) · [🌐 Open current live demo](https://dapperdude404.github.io/octo/app/)
+
+## 📄 Existing live features (introduced in v2.5.0)
 
 **Document Studio** imports PDF, DOCX and TXT into editable text, then exports DOCX, TXT, HTML, Markdown and JSON. A browser print dialog supports **Save as PDF**. PDF conversion extracts selectable text and does not preserve complex layouts; scanned PDFs still need OCR.
 
 **Visual themes:** Aurora, Plasma and Solar palettes, plus independent light/dark mode. Your selection is remembered on your device.
 
-[Launch Document Studio](https://dapperdude404.github.io/octo/app/#workspace) · [Read release notes](https://github.com/dapperdude404/octo/releases/tag/v2.5.0)
+[Launch Document Studio](https://dapperdude404.github.io/octo/app/#workspace) · [Read release notes](https://github.com/dapperdude404/octo/releases/tag/v5.0.0)
 
-## 🚀 AI Octopus Version 2 — Instant Demo
+## 🚀 AI Octopus — Current Live Demo
 
-**[▶ Launch AI Octopus Version 2 in your browser](https://dapperdude404.github.io/octo/app/)**
+**[▶ Launch AI Octopus in your browser](https://dapperdude404.github.io/octo/app/)**
 
-The Version 2 app is currently released as **v2.5.0**. The demo button opens the application directly. Try the AI pattern detector, clarity editor, grammar checker, and draft comparison. Browser-local tools need no account; optional online features connect to the deployed [Render API](https://ai-octopus-api-l83b.onrender.com/api/health). Third-party scans require provider credentials.
+The current browser demo provides the **v2.5 Document Studio-era interface**; V5 research modules have not yet been integrated into this interface. The demo button opens the application directly. Try the AI pattern detector, clarity editor, grammar checker, and draft comparison. Browser-local tools need no account; optional online features connect to the deployed [Render API](https://ai-octopus-api-l83b.onrender.com/api/health). Third-party scans require provider credentials.
 
 | | Open |
 |---|---|
 | 🌐 **Version 2 live demo** | **[Launch application →](https://dapperdude404.github.io/octo/app/)** |
-| 📦 Latest release | [Download v2.5.0](https://github.com/dapperdude404/octo/releases/tag/v2.5.0) |
+| 📦 Latest release | [Download v5.0.0](https://github.com/dapperdude404/octo/releases/tag/v5.0.0) |
 | 🐙 Classic Version 1 | [Open classic demo](https://dapperdude404.github.io/octo/) |
 
 ## ⚡ Try it in 30 seconds
