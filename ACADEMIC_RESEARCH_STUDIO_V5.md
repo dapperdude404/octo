@@ -16,10 +16,11 @@
 
 ## Proposed modules
 - `server/src/research/quality.js`: initial partial quality-signal engine (implemented on this branch)
-- `server/src/research/revisions.js`: structured revision suggestions and individual accept/reject (planned)
-- `server/src/research/citations.js`: parsing, attribution warnings and references (planned)
+- `server/src/research/revisions.js`: deterministic span suggestions with explicit accept/reject/restore engine (implemented; UI integration planned)
+- `server/src/research/citations.js`: local numbered-reference inventory, missing/unused/duplicate warnings (implemented; external verification planned)
 - `server/src/research/similarity.js`: local exact duplicate and user-supplied reference analysis with explicit Turnitin-unavailable status (initial module added; official provider adapter and UI planned)
-- `server/src/research/validation.js`: metric recomputation with provenance labels (planned)
+- `server/src/research/validation.js`: confusion-matrix accuracy/precision/recall/F1 recomputation with provenance (implemented; dataset upload UI and execution planned)
+- `server/src/research/provider-status.js`: honest provider capability/status manifest (implemented; credentialed scanning planned)
 - `server/src/research/ieee-export.js`: official-template document export (planned)
 - `web/research` and mirrored `app`: research dashboard and editor (planned)
 
@@ -34,12 +35,17 @@
 - [x] Inspect existing repo, stack and current version
 - [x] Create isolated development branch
 - [x] Add initial explainable scoring contract and unit tests
-- [ ] Implement reviewable editing UI and individual suggestion actions
+- [x] Add deterministic suggestions and independent accept/reject/restore logic with tests
+- [ ] Implement reviewable side-by-side editing UI and individual suggestion actions
 - [ ] Validate score definitions and full 100-point coverage
 - [ ] Implement authorized provider adapters and failure handling
-- [x] Add initial local duplicate/reference comparison with tests (not a plagiarism database scan)\n- [ ] Add New Plagiarism Review / New Turnitin Scan UI and authorized provider adapter\n- [ ] Implement verified external similarity/citation checks
+- [x] Add initial local duplicate/reference comparison with tests (not a plagiarism database scan)
+- [ ] Add New Plagiarism Review / New Turnitin Scan UI and authorized provider adapter
+- [ ] Implement verified external similarity/citation checks
 - [ ] Implement official IEEE template export and rendering tests
-- [ ] Implement research validation with provenance and recomputation
-- [ ] Run automated tests and security/dependency checks
-- [ ] Attach screenshots and verified test evidence to PR
+- [x] Add confusion-matrix recomputation with evidence status and tests
+- [ ] Implement model/dataset uploads and research validation UI
+- [x] Add dedicated GitHub Actions workflow for V5 unit tests
+- [ ] Run full existing test suite and security/dependency checks
+- [ ] Attach UI screenshots and verified CI evidence to PR
 - [ ] Obtain user review and approval for production deployment
