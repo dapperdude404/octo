@@ -23,7 +23,7 @@ test('accepted, rejected and restored decisions preserve immutable source and re
  assert.match(accepted,/Due to the fact that/);
  assert.match(accepted,/10 cases/);
  assert.equal(applyAcademicDecisions(source,suggestions,{}),source);
- assert.throws(()=>applyAcademicDecisions(source+' changed',suggestions,{}));
+ assert.throws(()=>applyAcademicDecisions('changed '+source,suggestions,{}));
 });
 test('research preview is copied into server public with shared pure engines',async()=>{
  const result=spawnSync(process.execPath,['scripts/build-web.js'],{cwd:root,encoding:'utf8'});
