@@ -14,6 +14,10 @@ const schema = z.object({
   COPYLEAKS_API_KEY: z.string().optional().default(''),
   COPYLEAKS_SANDBOX: z.string().default('true'),
   COPYLEAKS_WEBHOOK_ENABLED: z.string().default('false'),
+  GOOGLE_CLIENT_ID: z.string().optional().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
+  GITHUB_CLIENT_ID: z.string().optional().default(''),
+  GITHUB_CLIENT_SECRET: z.string().optional().default(''),
   COPYLEAKS_WEBHOOK_SECRET: z.string().default('')
 });
 

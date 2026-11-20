@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import path from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
+import { oauthRouter } from './oauth.js';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { env } from './config.js';
@@ -34,6 +35,8 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
   cb(null, ['.pdf', '.docx', '.txt'].includes(ext));
 } });
 
+app.use('/api/auth', oauthRouter);
+
 const registerSchema = z.object({ email: z.string().email().max(254), password: z.string().min(10).max(128), displayName: z.string().trim().max(80).optional() });
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1).max(128) });
 const scanSchema = z.object({ text: z.string().min(40).max(150000), title: z.string().trim().max(160).optional(), providers: z.array(z.enum(['gptzero','winston','copyleaks'])).min(1).max(3), kind: z.enum(['ai','plagiarism']).default('ai') });
@@ -53,7 +56,7 @@ app.post('/api/auth/login', authLimiter, async (req, res, next) => {
   try {
     const input = loginSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { email: input.email.toLowerCase() } });
-    if (!user || !(await verifyPassword(input.password, user.passwordHash))) return res.status(401).json({ error: 'Email or password is incorrect.' });
+    if (!user || !user.passwordHash || !(await verifyPassword(input.password, user.passwordHash))) return res.status(401).json({ error: 'Email or password is incorrect.' });
     res.json({ token: signToken(user), user: { id: user.id, email: user.email, displayName: user.displayName } });
   } catch (error) { next(error); }
 });

@@ -32,6 +32,21 @@ $('auth-form').onsubmit=async e=>{e.preventDefault();$('auth-error').textContent
 $('logout').onclick=()=>{state.token='';state.user=null;sessionStorage.removeItem('octo_token');updateAccount();closeAuth();notify('Signed out. Local writing tools remain available.');if(state.tab==='history')renderHistory(null);};
 $('save-api-host').onclick=e=>{e.preventDefault();const value=$('api-host').value.trim().replace(/\/$/,'');if(value&&!/^https?:\/\//i.test(value))return notify('API server must start with https:// or http://');localStorage.setItem('octo_api_base',value);notify('API server saved.');};
 
+document.querySelectorAll('[data-oauth]').forEach(btn=>btn.onclick=async()=>{
+  $('oauth-error').textContent='';btn.disabled=true;
+  try {const result=await api('/api/auth/oauth/status');const provider=btn.dataset.oauth;if(!result[provider])throw Error(provider+' sign-in is not configured yet.');
+    location.assign(apiBase()+'/api/auth/oauth/'+provider+'/start');
+  }catch(error){$('oauth-error').textContent=error.message;btn.disabled=false;}
+});
+async function completeOAuth(){
+  const params=new URLSearchParams(location.hash.slice(1));
+  const code=params.get('octo_oauth_code'),error=params.get('octo_oauth_error');
+  if(!code&&!error)return;
+  history.replaceState(null,'',location.pathname+location.search);
+  if(error){openAuth();$('oauth-error').textContent=error==='account_exists'?'This email already has an account. Sign in with your existing method; account linking requires a separate verified step.':'Social sign-in failed or was cancelled.';return;}
+  try{const data=await api('/api/auth/oauth/exchange',{method:'POST',body:JSON.stringify({code})});state.token=data.token;state.user=data.user;sessionStorage.setItem('octo_token',data.token);updateAccount();notify('Signed in successfully.');}
+  catch(e){openAuth();$('oauth-error').textContent=e.message;}
+}
 const viewIds=['detector','editor','grammar','compare','documents','providers','history'];
 const titles={detector:'Analyze writing',editor:'Improve clarity',grammar:'Check grammar',compare:'Compare versions',documents:'Export Word DOCX',providers:'Submit scans',history:'View history'};
 function selectTab(tab,scroll=false){if(!viewIds.includes(tab))return;state.tab=tab;document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});viewIds.forEach(id=>$(id+'-view').classList.toggle('hidden',id!==tab));$('primary-action').innerHTML=`${titles[tab]} <span>→</span>`;$('editor-help').innerHTML=tab==='detector'?'Enter at least <b>40 words</b> for the AI-like pattern estimate.':tab==='providers'?'API keys and an <b>account</b> are needed for provider scans.':tab==='compare'?'Enter the revised draft in the <b>right panel</b>.':tab==='documents'?'Import PDF, DOCX or TXT, then export editable text.':'Your original draft stays in the editor on the left.';if(tab==='history')loadHistory();if(scroll)$('workspace').scrollIntoView({behavior:'smooth',block:'start'});}
@@ -98,4 +113,4 @@ async function exportDocument(format){
 }
 document.querySelectorAll('[data-export]').forEach(btn=>btn.onclick=()=>exportDocument(btn.dataset.export));
 
-(async function boot(){updateCounts();updateAccount();if(state.token){try{const {user}=await api('/api/auth/me');state.user=user;updateAccount();}catch{state.token='';sessionStorage.removeItem('octo_token');}}})();
+(async function boot(){updateCounts();updateAccount();await completeOAuth();if(state.token){try{const {user}=await api('/api/auth/me');state.user=user;updateAccount();}catch{state.token='';sessionStorage.removeItem('octo_token');}}})();
