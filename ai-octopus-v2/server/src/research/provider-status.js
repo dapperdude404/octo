@@ -1,0 +1,5 @@
+const PROVIDERS=Object.freeze({gptzero:{name:'GPTZero',purpose:'AI-writing assessment',requires:'GPTZERO_API_KEY'},winston:{name:'Winston AI',purpose:'AI-writing assessment',requires:'WINSTON_API_KEY'},copyleaks:{name:'Copyleaks',purpose:'AI-writing and similarity assessment',requires:'COPYLEAKS_EMAIL and COPYLEAKS_API_KEY'},turnitin:{name:'Turnitin',purpose:'Institutionally authorized similarity and AI-writing services',requires:'Official Turnitin institutional or partner integration'}});
+export function providerCapabilities({gptzero=false,winston=false,copyleaks=false,turnitin=false}={}){
+ const enabled={gptzero,winston,copyleaks,turnitin};
+ return Object.entries(PROVIDERS).map(([id,meta])=>({id,...meta,status:enabled[id]===true?'CREDENTIALS_INDICATED_NOT_VERIFIED':'NOT_CONFIGURED',verifiedScanAvailable:false,scanDate:null,score:null,limitations:['Configuration presence does not prove valid credentials, account access or provider availability.','Scores must come from an actual authorized provider response with its score definition.']}));
+}

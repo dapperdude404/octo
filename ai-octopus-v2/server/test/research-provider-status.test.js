@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {providerCapabilities} from '../src/research/provider-status.js';
+test('no provider is represented as an actual scan',()=>{const all=providerCapabilities({gptzero:true,winston:true,copyleaks:true,turnitin:true});assert.equal(all.length,4);for(const p of all){assert.equal(p.verifiedScanAvailable,false);assert.equal(p.score,null);assert.equal(p.scanDate,null);}});

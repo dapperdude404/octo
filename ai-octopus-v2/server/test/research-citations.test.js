@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {reviewCitations} from '../src/research/citations.js';
+test('finds missing, unused and duplicate references without claiming verification',()=>{const r=reviewCitations('Method [1] and comparison [3].\n\nReferences\n[1] First paper\n[2] Unused paper\n[2] Duplicate');assert.deepEqual(r.missingReferences,[3]);assert.deepEqual(r.unusedReferences,[2]);assert.deepEqual(r.duplicateReferenceNumbers,[2]);assert.equal(r.sourceExistenceVerified,false);});

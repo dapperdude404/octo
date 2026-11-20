@@ -1,0 +1,26 @@
+name: V5 Academic Research Studio checks
+on:
+  pull_request:
+    paths:
+      - 'ai-octopus-v2/server/src/research/**'
+      - 'ai-octopus-v2/server/test/research-*.test.js'
+      - '.github/workflows/v5-research-checks.yml'
+  push:
+    branches: ['feature/academic-research-studio-v5']
+    paths:
+      - 'ai-octopus-v2/server/src/research/**'
+      - 'ai-octopus-v2/server/test/research-*.test.js'
+      - '.github/workflows/v5-research-checks.yml'
+permissions:
+  contents: read
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run dependency-free research unit tests
+        working-directory: ai-octopus-v2
+        run: node --test server/test/research-*.test.js
