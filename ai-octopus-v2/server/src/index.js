@@ -17,7 +17,8 @@ import { scanWinston, getWinstonScan } from './providers/winston.js';
 import { submitCopyleaks, copyleaksWebhook } from './providers/copyleaks.js';
 import { localAnalyze, improveClarity, grammarReview } from './analysis.js';
 import mammoth from 'mammoth';
-import { extractPdfText, makeDocx, safeDocumentName } from './documents.js';
+import pdfParse from 'pdf-parse';
+import {makeDocx,safeDocumentName} from './documents.js';
 
 const app = express();
 // Render terminates HTTPS at its reverse proxy. Trust only the immediate proxy hop
@@ -74,20 +75,11 @@ app.post('/api/documents/extract', uploadLimiter, upload.single('file'), async (
     const ext = path.extname(req.file.originalname).toLowerCase();
     if (ext === '.pdf' && !req.file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) return res.status(415).json({ error: 'File contents do not match a PDF.' });
     if (ext === '.docx' && !req.file.buffer.subarray(0, 2).equals(Buffer.from('PK'))) return res.status(415).json({ error: 'File contents do not match a DOCX.' });
-    let text;
-    try {
-      if (ext === '.txt') text = req.file.buffer.toString('utf8');
-      if (ext === '.docx') text = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
-      if (ext === '.pdf') text = await extractPdfText(req.file.buffer);
-    } catch (error) {
-      if (error.name === 'PasswordException') {
-        return res.status(422).json({ error: 'This PDF is password-protected. Save an unlocked copy before importing.' });
-      }
-      return res.status(422).json({ error: 'Could not read this document. Try opening it and saving a new copy before importing.' });
-    }
-    if (typeof text !== 'string' || !text.trim()) {
-      return res.status(422).json({ error: 'No selectable text was found. Scanned PDFs need OCR before analysis.' });
-    }
+    let text = '';
+    if (ext === '.txt') text = req.file.buffer.toString('utf8');
+    if (ext === '.docx') text = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+    if (ext === '.pdf') text = (await pdfParse(req.file.buffer)).text;
+    if (!text.trim()) return res.status(422).json({ error: 'No selectable text was found. Scanned PDFs need OCR before analysis.' });
     res.json({ filename: req.file.originalname, text: text.slice(0, 150000), truncated: text.length > 150000 });
   } catch (error) { next(error); }
 });

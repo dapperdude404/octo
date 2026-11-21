@@ -32,56 +32,17 @@ export function localAnalyze(text) {
     label:score<30?'Few selected surface patterns':score<60?'Mixed surface-pattern signals':'Several selected surface patterns',
     components,matches:hits,warning:'Rule-based surface-pattern score only; this is not a validated probability of AI authorship.'};
 }
-const clarityReplacements = [
-  [/\butili[sz]e\b/gi, 'use'], [/\bleverage\b/gi, 'use'], [/\bin order to\b/gi, 'to'],
-  [/\bdue to the fact that\b/gi, 'because'], [/\bat this point in time\b/gi, 'now'],
-  [/\bwith regard to\b/gi, 'about'], [/\bin the event that\b/gi, 'if'],
-  [/\ba large number of\b/gi, 'many'], [/\bhas the ability to\b/gi, 'can']
-];
-// Keep common quotations, Markdown code, LaTeX math and numbered citations intact.
-const protectedClaritySpans = new RegExp('(' + [
-  /`{3}[\s\S]*?`{3}|`[^`\r\n]*`/.source,
-  /“[^“”]*”|‘[^‘’]*’|"[^"\r\n]*"|(?<![\p{L}\p{N}])'[^'\r\n]*'(?![\p{L}\p{N}])/u.source,
-  /\$\$[\s\S]*?\$\$|\$[^$\r\n]*\$/.source,
-  /\\\((?:(?!\\[()])[\s\S])*\\\)|\\\[(?:(?!\\[[\]])[\s\S])*\\\]/.source,
-  /\[\d+(?:[ ,–-]+\d+)*\]/.source
-].join('|') + ')', 'gu');
-const sentenceNotePrefix = /(^[ \t\r\n]*|[.!?][ \t\r\n]+|\r?\n[ \t]*\r?\n[ \t]*)(?:it is important to note that|it should be noted that)[ \t]+(\p{L}+(?:['’]\p{L}+)?)(?=[ \t]+\p{L}|[,.!?;](?![\p{L}\p{N}.])|[ \t]*(?:\r?\n|$))/giu;
-const commonAbbreviation = /(?:\b(?:[a-z]|mr|mrs|ms|dr|prof|fig|eq|ref|al)|\b(?:e\.g|i\.e))$/i;
-
 export function improveClarity(text) {
-  const pieces = String(text || '').split(protectedClaritySpans);
-  for (let index = 0; index < pieces.length; index += 2) {
-    const startsSentence = index === 0 || /[.!?]["'”’]$/u.test(pieces[index - 1]);
-    let prose = pieces[index];
-    for (const [pattern, replacement] of clarityReplacements) prose = prose.replace(pattern, replacement);
-    prose = prose.replace(sentenceNotePrefix, (match, boundary, word, offset, source) => {
-      if (!startsSentence && offset === 0 && !boundary.trim()) return match;
-      if (boundary.startsWith('.') && commonAbbreviation.test(source.slice(Math.max(0, offset - 8), offset))) return match;
-      if (word.length === 1 && !/^[ai]$/i.test(word)) return match;
-      const firstWord = word === word.toLowerCase() ? word.replace(/^\p{Ll}/u, letter => letter.toUpperCase()) : word;
-      return boundary + firstWord;
-    });
-    pieces[index] = prose.replace(/[ \t]+([,.;!?])/g, '$1').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n');
-  }
-  return pieces.join('').trim();
-}
-
-export async function readDocumentExtraction(response) {
-  const mediaType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
-  const isJson = mediaType === 'application/json' || mediaType?.endsWith('+json');
-  const data = isJson ? await response.json().catch(() => null) : null;
-  if (!response.ok) {
-    const error = typeof data?.error === 'string' && data.error.trim() ? data.error : null;
-    throw new Error(error || 'Document import failed (' + response.status + '). Check the file and the API server.');
-  }
-  if (typeof data?.text !== 'string') {
-    throw new Error('The API server did not return document text. Check the server address and try again.');
-  }
-  if (!data.text.trim()) {
-    throw new Error('No selectable text was found. Run OCR on scanned PDFs before importing.');
-  }
-  return { text: data.text, truncated: data.truncated === true };
+  let out = String(text || '');
+  const replacements = [
+    [/\butili[sz]e\b/gi,'use'],[/\bleverage\b/gi,'use'],[/\bin order to\b/gi,'to'],
+    [/\bdue to the fact that\b/gi,'because'],[/\bat this point in time\b/gi,'now'],
+    [/\bwith regard to\b/gi,'about'],[/\bin the event that\b/gi,'if'],
+    [/\ba large number of\b/gi,'many'],[/\bhas the ability to\b/gi,'can'],
+    [/\bit is important to note that\b/gi,''],[/\bit should be noted that\b/gi,'']
+  ];
+  for(const [pattern,replacement] of replacements) out=out.replace(pattern,replacement);
+  return out.replace(/[ \t]+([,.;!?])/g,'$1').replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
 }
 
 export function grammarReview(text){

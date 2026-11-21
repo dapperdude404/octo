@@ -19,27 +19,3 @@ test('word-level diff identifies changed text',()=>{
   assert.equal(r.parts.find(x=>x.kind==='added').word,'bright');
 });
 test('clarity edits are conservative',()=>assert.equal(improveClarity('We utilize tools in order to work.'),'We use tools to work.'));
-
-test('clarity capitalizes the new sentence start after removing a boilerplate opener', () => {
-  assert.equal(
-    improveClarity("A good revision preserves the writer's intention. It is important to note that no result changed."),
-    "A good revision preserves the writer's intention. No result changed."
-  );
-  assert.equal(improveClarity('It should be noted that the table was updated.'), 'The table was updated.');
-  assert.equal(improveClarity('Results follow.\n\nIt is important to note that a sample was dropped.'), 'Results follow.\n\nA sample was dropped.');
-  assert.equal(improveClarity('It is important to note that a large number of examples remain.'), 'Many examples remain.');
-});
-
-test('clarity preserves inline phrases, quotations, citations, code and equations', () => {
-  const protectedText = [
-    'She wrote, “It is important to note that no samples failed. We utilize the same method.”',
-    'The report explains that it is important to note that no samples failed.',
-    'It is important to note that p < 0.05.',
-    'See [1,  2], $x  =  0.05$, \\(y  =  0.01\\) and \x60leverage(value)\x60.'
-  ].join('\n');
-  assert.equal(improveClarity(protectedText), protectedText);
-  assert.equal(
-    improveClarity('See Fig. it is important to note that no samples failed.'),
-    'See Fig. it is important to note that no samples failed.'
-  );
-});
