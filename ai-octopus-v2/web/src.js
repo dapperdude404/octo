@@ -1,19 +1,34 @@
-import {countWords,getSentences,localAnalyze,improveClarity,grammarReview,compareDrafts} from './core.js';
+import {countWords,getSentences,localAnalyze,improveClarity,grammarReview,compareDrafts,readDocumentExtraction} from './core.js';
 const $=id=>document.getElementById(id);
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state={tab:'detector',user:null,token:sessionStorage.getItem('octo_token')||'',authMode:'login',original:'',revision:'',lastAnalysis:null};
 let toastTimer;
+let uploadId = 0;
 function notify(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),3200);}
 function text(){return $('editor').value.trim();}
-function setText(value){$('editor').value=String(value);updateCounts();}
+function setText(value, { keepRevision = false } = {}) {
+  const editor = $('editor');
+  if (!keepRevision && editor.value !== value) resetClarity();
+  editor.value = value;
+  updateCounts();
+}
 function updateCounts(){const v=$('editor').value,w=countWords(v);if($('doc-word-stat')){$('doc-word-stat').textContent=w.toLocaleString()+' words';$('doc-char-stat').textContent=v.length.toLocaleString()+' characters';}$('word-count').textContent=`${w.toLocaleString()} words`;$('char-count').textContent=`${v.length.toLocaleString()} characters`;$('read-time').textContent=`${Math.max(1,Math.ceil(w/220))} min read`;}
 function apiBase(){const userHost=localStorage.getItem('octo_api_base');const defaultHost=location.hostname.endsWith('.github.io')?'https://ai-octopus-api-l83b.onrender.com':'';return (userHost||defaultHost).replace(/\/$/,'');}
-async function api(route,options={}){
+async function request(route,options={}){
   if(location.hostname.endsWith('.github.io') && !apiBase()) throw Error('This online version needs a connected API server for accounts, PDF/DOCX and provider scans. Open Sign in, then Connect an online API server.');
   const headers={...options.headers};if(state.token)headers.Authorization=`Bearer ${state.token}`;
   if(options.body&&!(options.body instanceof FormData))headers['Content-Type']='application/json';
-  let response;try{response=await fetch(`${apiBase()}${route}`,{...options,headers});}catch{throw Error('Could not reach the Octopus server. Set your API host if you are using Android.');}
-  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||`Request failed (${response.status})`);return data;
+  try {
+    return await fetch(apiBase() + route, {...options, headers});
+  } catch {
+    throw Error('Could not reach the Octopus server. Set your API host if you are using Android.');
+  }
+}
+async function api(route, options = {}) {
+  const response = await request(route, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Error(data?.error || 'Request failed (' + response.status + ')');
+  return data;
 }
 function openAuth(){
   $('auth-modal').classList.remove('hidden');document.body.style.overflow='hidden';
@@ -45,18 +60,88 @@ function setPalette(name){const next=palettes.includes(name)?name:'aurora';docum
 $('theme-palette').onchange=()=>setPalette($('theme-palette').value);
 setPalette(localStorage.getItem('octo_palette'));
 
-$('editor').addEventListener('input',updateCounts);
+$('editor').addEventListener('input', () => {
+  updateCounts();
+  resetClarity();
+});
 const sample=`Writing is a way to think more clearly, not just a way to finish a task. When a draft feels complicated, I read it aloud and look for sentences that try to do too much. I might change the order of two ideas or replace a long phrase with a shorter one. Moreover, a good revision should preserve the writer's intention. It is important to note that no single writing pattern can tell us who wrote a passage. In conclusion, useful feedback shows what can change without claiming to know the author's identity.`;
 $('sample-button').onclick=()=>{setText(sample);notify('Sample draft loaded.');};
-$('clear-button').onclick=()=>{setText('');$('file-name').textContent='';state.revision='';state.lastAnalysis=null;resetResults();notify('Editor cleared.');};
+$('clear-button').onclick=()=>{setText('');$('file-name').textContent='';resetClarity();state.lastAnalysis=null;resetResults();notify('Editor cleared.');};
 $('paste-button').onclick=async()=>{try{const s=await navigator.clipboard.readText();setText(s);notify('Clipboard text pasted.');}catch{notify('Clipboard access unavailable. Paste directly in the editor.');}};
 $('copy-button').onclick=async()=>{if(!text())return notify('There is no text to copy.');try{await navigator.clipboard.writeText(text());notify('Draft copied to clipboard.');}catch{notify('Clipboard access unavailable.');}};
 $('download-button').onclick=()=>{if(!text())return notify('There is no text to download.');const url=URL.createObjectURL(new Blob([text()],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='ai-octopus-draft.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('file').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>10*1024*1024)throw Error('File must be under 10 MB.');const ext=file.name.split('.').at(-1)?.toLowerCase();if(ext==='txt'){setText(await file.text());}else if(ext==='pdf'||ext==='docx'){const fd=new FormData();fd.append('file',file);const data=await api('/api/documents/extract',{method:'POST',body:fd});setText(data.text);if(data.truncated)notify('Only the first 150,000 characters were loaded.');}else throw Error('Use a TXT, PDF or DOCX file.');$('file-name').textContent=file.name;$('doc-title').value=file.name.replace(/\.[^.]+$/,'').slice(0,70)||'ai-octopus-draft';notify('Document imported.');}catch(error){notify(error.message);}finally{e.target.value='';}};
+$('file').onchange = async event => {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  if (!file) return;
+  input.value = '';
+  const id = ++uploadId;
+  const original = $('editor').value;
+
+  try {
+    if (file.size > 10 * 1024 * 1024) throw Error('Use a file no larger than 10 MB.');
+    const extension = file.name.split('.').at(-1)?.toLowerCase();
+    let result;
+    if (extension === 'txt') {
+      result = { text: await file.text(), truncated: false };
+    } else if (extension === 'pdf' || extension === 'docx') {
+      const form = new FormData();
+      form.append('file', file);
+      const response = await request('/api/documents/extract', { method: 'POST', body: form });
+      result = await readDocumentExtraction(response);
+    } else {
+      throw Error('Choose a TXT, PDF, or DOCX file.');
+    }
+
+    if (id !== uploadId) return;
+    if ($('editor').value !== original) {
+      notify('Your draft changed during import. Choose the file again to replace it.');
+      return;
+    }
+    setText(result.text);
+    $('file-name').textContent = file.name;
+    $('doc-title').value = file.name.replace(/\.[^.]+$/, '').slice(0, 70) || 'ai-octopus-draft';
+    notify(result.truncated ? 'Imported the first 150,000 characters.' : 'Document imported.');
+  } catch (error) {
+    if (id === uploadId) notify(error.message);
+  }
+};
 function resetResults(){$('score-number').textContent='—';$('score-label').textContent='Your score awaits';$('score-summary').textContent='Add a passage and press Analyze writing to see Octopus\'s pattern breakdown.';$('score-ring').style.setProperty('--percent','0%');$('score-ring').style.setProperty('--ring-color','#8292a6');$('score-ring').setAttribute('aria-valuenow','0');$('score-pin').style.left='0%';$('signals-list').innerHTML='<div class="empty-insight"><span>✳</span><p>Your insights will appear here after analysis.</p></div>';$('signals-count').textContent='0 insights';$('result-tag').textContent='READY';$('revision-preview').textContent='Your revised draft will appear here.';$('grammar-list').innerHTML='<div class="empty-insight"><span>✳</span><p>Choose Grammar and press Check grammar to begin.</p></div>';}
 function runDetector(){const r=localAnalyze(text());state.lastAnalysis=r;if(!r.available)return notify(r.note);const c=r.score<30?'var(--mint)':r.score<60?'var(--amber)':'var(--red)';$('score-number').textContent=r.score;$('score-ring').style.setProperty('--percent',`${r.score}%`);$('score-ring').style.setProperty('--ring-color',c);$('score-ring').setAttribute('aria-valuenow',r.score);$('score-pin').style.left=`${r.score}%`;$('score-label').textContent=r.score<30?'Human-like patterns':r.score<60?'Mixed writing signals':'AI-like patterns';$('score-label').style.color=c;$('score-summary').textContent=`Based on ${r.wordCount} words and ${r.sentenceCount} sentences. This is a pattern score, not an authorship probability.`;$('result-tag').textContent='ANALYZED';const entries=[['Stock expressions',r.components.stockPhrases,'Selected phrases: '+(r.matches.join(', ')||'none')],['Sentence rhythm',r.components.evenSentenceLength,'Similarity in sentence lengths'],['Contractions',r.components.noContractions,'Absence of contractions in longer passages'],['Em dashes',r.components.emDashes,'Em dash frequency'],['Formal transitions',r.components.formalOpeners,'Connectives at the start of sentences']];$('signals-count').textContent=`${entries.filter(x=>x[1]>0).length} signals`;$('signals-list').innerHTML=entries.map(([title,value,detail])=>`<div class="signal-item"><strong>${escapeHtml(title)}</strong><em>+${Number(value).toFixed(1)} pts</em><small>${escapeHtml(detail)}</small></div>`).join('');notify('Pattern analysis complete.');}
-function runClarity(){if(!text())return notify('Paste a draft first.');state.original=text();state.revision=improveClarity(state.original);$('revision-preview').textContent=state.revision;$('apply-revision').disabled=state.revision===state.original;$('restore-original').disabled=false;notify(state.revision===state.original?'No preset wording changes found.':'Revision ready for review.');}
-$('apply-revision').onclick=()=>{if(!state.revision)return;setText(state.revision);notify('Revision applied. You can restore the original.');};$('restore-original').onclick=()=>{if(!state.original)return;setText(state.original);notify('Original draft restored.');};$('copy-revision').onclick=async()=>{if(!state.revision)return notify('Generate a revision first.');try{await navigator.clipboard.writeText(state.revision);notify('Revision copied.');}catch{notify('Clipboard unavailable.');}};
+function resetClarity() {
+  if (!state.original) return;
+  state.original = '';
+  state.revision = '';
+  $('revision-preview').textContent = 'Your revised draft will appear here.';
+  $('apply-revision').disabled = true;
+  $('restore-original').disabled = true;
+}
+function runClarity() {
+  const original = $('editor').value;
+  if (!original.trim()) return notify('Paste a draft first.');
+  state.original = original;
+  state.revision = improveClarity(original);
+  const unchanged = state.revision === original.trim();
+  $('revision-preview').textContent = state.revision;
+  $('apply-revision').disabled = unchanged;
+  $('restore-original').disabled = true;
+  notify(unchanged ? 'No preset wording changes found.' : 'Revision ready for review.');
+}
+$('apply-revision').onclick = () => {
+  if (!state.original || $('editor').value !== state.original) return;
+  setText(state.revision, { keepRevision: true });
+  $('apply-revision').disabled = true;
+  $('restore-original').disabled = false;
+  notify('Revision applied. You can restore the original.');
+};
+$('restore-original').onclick = () => {
+  if (!state.original || $('editor').value !== state.revision) return;
+  setText(state.original, { keepRevision: true });
+  $('apply-revision').disabled = false;
+  $('restore-original').disabled = true;
+  notify('Original draft restored.');
+};
+$('copy-revision').onclick=async()=>{if(!state.revision)return notify('Generate a revision first.');try{await navigator.clipboard.writeText(state.revision);notify('Revision copied.');}catch{notify('Clipboard unavailable.');}};
 function runGrammar(){if(!text())return notify('Paste a draft first.');const r=grammarReview(text());$('grammar-summary').textContent=r.issueCount?`${r.issueCount} possible issue${r.issueCount===1?'':'s'} found`:'No listed issues found';$('grammar-sub').textContent=`Checked ${r.wordCount} words and ${r.sentenceCount} sentences against selected rules.`;$('grammar-list').innerHTML=r.issues.length?r.issues.map(item=>`<div class="grammar-item"><strong>${escapeHtml(item.type)}</strong><span class="grammar-quote">“${escapeHtml(item.match)}”</span><p>${escapeHtml(item.detail)}</p></div>`).join(''):'<div class="empty-insight"><span>✓</span><p>No issues matched these simple checks. A full proofread may still find others.</p></div>';notify('Grammar review complete.');}
 function runCompare(){const r=compareDrafts(text(),$('compare-text').value);if(r.error)return notify(r.error);$('compare-results').innerHTML=`<p><b>${r.added} added · ${r.removed} removed</b></p><div>${r.parts.map(x=>x.kind==='added'?`<ins>${escapeHtml(x.word)}</ins>`:x.kind==='removed'?`<del>${escapeHtml(x.word)}</del>`:escapeHtml(x.word)).join(' ')}</div>`;notify('Draft comparison complete.');}
 $('compare-button').onclick=runCompare;
