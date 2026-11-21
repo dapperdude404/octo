@@ -3,16 +3,12 @@ on:
   pull_request:
     paths:
       - 'ai-octopus-v2/server/src/research/**'
-      - 'ai-octopus-v2/web/research/**'
-      - 'ai-octopus-v2/scripts/build-web.js'
       - 'ai-octopus-v2/server/test/research-*.test.js'
       - '.github/workflows/v5-research-checks.yml'
   push:
-    branches: ['feature/academic-research-studio-v5', 'feature/academic-revision-workspace-v5-1']
+    branches: ['feature/academic-research-studio-v5']
     paths:
       - 'ai-octopus-v2/server/src/research/**'
-      - 'ai-octopus-v2/web/research/**'
-      - 'ai-octopus-v2/scripts/build-web.js'
       - 'ai-octopus-v2/server/test/research-*.test.js'
       - '.github/workflows/v5-research-checks.yml'
 permissions:
