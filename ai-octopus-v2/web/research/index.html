@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>OCTO AI — Academic Revision Workspace</title><link rel="stylesheet" href="./style.css"></head>
+<body>
+<a class="skip" href="#source">Skip to manuscript</a>
+<header><div><a href="../index.html" class="back">← OCTO AI Workspace</a><p class="eyebrow">ACADEMIC RESEARCH STUDIO · V5.1 PREVIEW</p><h1>Review every revision.</h1><p>Local, deterministic writing suggestions. Nothing is sent to a provider or saved remotely.</p></div><span class="pill">Research preview · not a scientific assessment</span></header>
+<main>
+<section class="toolbar" aria-label="Revision settings"><label for="style">Writing preset</label><select id="style"><option value="ieee">IEEE</option><option value="apa">APA</option><option value="general">General</option></select><button id="analyze" type="button">Generate suggestions</button><button id="restore" type="button" class="secondary">Restore all</button><button id="copy" type="button" class="secondary">Copy revised text</button></section>
+<div class="columns">
+<section class="panel"><h2>Original manuscript</h2><p class="help">Editable source. Generate suggestions after each source change. The original stays unchanged when reviewing edits.</p><label for="source">Manuscript text</label><textarea id="source" spellcheck="true" maxlength="200000" placeholder="Paste a research paragraph here…"></textarea><p id="source-count" class="meta">0 characters</p></section>
+<section class="panel"><h2>Revised preview</h2><p class="help">Only accepted changes appear here. Pending and rejected suggestions retain the original wording.</p><label for="revised">Revised text (read only)</label><textarea id="revised" readonly aria-readonly="true"></textarea><p id="decision-count" class="meta">No suggestions generated</p></section>
+</div>
+<section class="panel review" aria-labelledby="review-title"><h2 id="review-title">Suggested changes</h2><p class="help">Review each proposal before accepting. Wording suggestions do not verify scientific claims, citations or experimental results.</p><div id="suggestions" class="suggestions"><p>No suggestions yet. Enter text and select Generate suggestions.</p></div></section>
+<section class="panel" aria-labelledby="evidence-title"><h2 id="evidence-title">Evidence-aware review</h2><div id="evidence" class="evidence"><p>Generate suggestions to see local quality signals and citation structure warnings.</p></div><p class="help">Quality signals are partial heuristics, not a 100-point grade. Citation checks are structural only; no DOI, publication, plagiarism or AI authorship verification is performed.</p></section>
+<p id="status" role="status" aria-live="polite" class="status"></p>
+</main>
+<script type="module" src="./workspace.js"></script>
+</body></html>
