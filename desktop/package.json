@@ -19,7 +19,7 @@
   "build": {
     "appId": "com.octoai.studio",
     "productName": "Octo AI Studio",
-    "files": ["main.cjs", "package.json"],
+    "files": ["main.cjs", "preload.cjs", "package.json"],
     "extraResources": [
       { "from": "../app", "to": "studio" },
       { "from": "../LICENSE", "to": "Octo-LICENSE.txt" }

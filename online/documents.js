@@ -302,8 +302,9 @@ export function initDocumentStudio({getDraft, sendToDraft}) {
         pageNumbers: $('doc-page-numbers').checked,
         customFont: $('doc-font-file').files[0]
       });
-      downloadFile(data, type, name + '.' + output);
-      status.textContent = output.toUpperCase() + ' download started.';
+      const result = await downloadFile(data, type, name + '.' + output);
+      status.textContent = result === 'cancelled' ? 'Save cancelled.'
+        : output.toUpperCase() + (result === 'saved' ? ' saved.' : ' download started.');
     } catch (error) {
       status.textContent = error.message || 'Could not create this document.';
     } finally {
@@ -394,8 +395,9 @@ export function initPdfTools() {
           for (const page of await pdf.copyPages(source, selected)) pdf.addPage(page);
         }
       }
-      downloadFile(await pdf.save(), PDF_MIME, documentName($('pdf-tool-name').value, 'octo-pages') + '.pdf');
-      status.textContent = pdf.getPageCount().toLocaleString() + ' pages · PDF download started.';
+      const result = await downloadFile(await pdf.save(), PDF_MIME, documentName($('pdf-tool-name').value, 'octo-pages') + '.pdf');
+      status.textContent = result === 'cancelled' ? 'Save cancelled.'
+        : pdf.getPageCount().toLocaleString() + ' pages · ' + (result === 'saved' ? 'PDF saved.' : 'PDF download started.');
     } catch (error) {
       status.textContent = error.message || 'Could not read one of the selected files.';
     } finally {

@@ -30,7 +30,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../public');
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", 'data:', 'blob:'], workerSrc: ["'self'", 'blob:'], connectSrc: ["'self'", 'https:', 'http:'], objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'none'"] } } }));
-app.use(cors({ origin: [env.APP_ORIGIN, 'capacitor://localhost', 'octo://studio', 'http://localhost', 'https://localhost'], credentials: false }));
+app.use(cors({ origin: [new URL(env.APP_ORIGIN).origin, 'capacitor://localhost', 'octo://studio', 'http://localhost', 'https://localhost'], credentials: false }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
 const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 15, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many sign-in attempts. Try again in 15 minutes.' } });
@@ -96,6 +96,16 @@ app.post('/api/documents/export/docx', exportLimiter, async (req,res,next)=>{
     res.set('Cache-Control','no-store');
     res.send(buffer);
   }catch(error){next(error);}
+});
+
+app.get('/api/scans/status', (_req, res) => {
+  const providers = {
+    gptzero: Boolean(env.GPTZERO_API_KEY),
+    winston: Boolean(env.WINSTONAI_API_KEY),
+    copyleaks: Boolean(env.COPYLEAKS_EMAIL && env.COPYLEAKS_API_KEY)
+      && (env.NODE_ENV !== 'production' || env.COPYLEAKS_SANDBOX !== 'true')
+  };
+  res.json({ providers });
 });
 
 app.post('/api/scans', requireAuth, async (req, res, next) => {
@@ -199,6 +209,7 @@ app.post('/api/webhooks/copyleaks/:status', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.use('/api', (_req, res) => res.status(404).json({ error: 'This endpoint is unavailable on the Octo AI server.' }));
 app.use('/assets', express.static(path.join(publicDir, 'assets'), { maxAge: '1h' }));
 app.use(express.static(publicDir));
 app.get('/{*splat}', (_req, res) => res.sendFile(path.join(publicDir, 'index.html')));

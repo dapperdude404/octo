@@ -45,31 +45,62 @@ function notify(message) {
   toastTimer = setTimeout(() => $('toast').classList.add('hidden'), 3800);
 }
 
+const packaged = location.protocol === 'octo:' || window.Capacitor?.isNativePlatform?.() === true;
+const defaultApi = packaged || location.hostname.endsWith('.github.io')
+  ? 'https://ai-octopus-api-l83b.onrender.com' : '';
 let apiHost = readSetting('localStorage', 'octo_api_base');
+let checkedHost;
+
 function apiBase() {
-  const fallback = location.hostname.endsWith('.github.io')
-    ? 'https://ai-octopus-api-l83b.onrender.com' : '';
-  return (apiHost || fallback).replace(/\/$/, '');
+  return (apiHost || defaultApi).replace(/\/$/, '');
 }
 
-async function api(route, options = {}) {
+async function requestJson(host, route, options = {}) {
   const headers = new Headers(options.headers);
-  if (state.token) headers.set('Authorization', `Bearer ${state.token}`);
+  headers.set('Accept', 'application/json');
   if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
   let response;
   try {
-    response = await fetch(`${apiBase()}${route}`, { ...options, headers });
-  } catch {
-    throw Error('Could not reach the Octo AI server. Check the API address in account settings.');
+    const requestHost = location.protocol === 'octo:' && host === defaultApi ? '' : host;
+    response = await fetch(`${requestHost}${route}`, {
+      signal: AbortSignal.timeout(45000), ...options, headers, redirect: 'error', cache: 'no-store'
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError') throw Error('The Octo AI server took too long to respond. Try again.');
+    throw Error('Could not reach the Octo AI server. Check the connection and server address.');
   }
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data) {
-    const message = !apiBase() && [404, 405, 501].includes(response.status)
-      ? 'Connect an Octo AI API server in account settings to use this feature.'
-      : `The server could not complete the request (${response.status}).`;
-    throw Error(data?.error || message);
+  const data = response.headers.get('content-type')?.includes('application/json')
+    ? await response.json().catch(() => null) : null;
+  if (!data || typeof data !== 'object') {
+    if (response.ok || response.status === 404 || response.status === 405) {
+      throw Error('This address returned a web page or an incompatible API. Check the Octo AI server address.');
+    }
+    throw Error(`The Octo AI server is unavailable (HTTP ${response.status}). Try again later.`);
+  }
+  if (!response.ok) {
+    const error = Error(typeof data.error === 'string' ? data.error : `The Octo AI server returned HTTP ${response.status}.`);
+    error.status = response.status;
+    throw error;
   }
   return data;
+}
+
+async function checkServer(host) {
+  const health = await requestJson(host, '/api/health');
+  if (health.ok !== true || health.service !== 'octo-ai-api') {
+    throw Error('This address does not identify itself as an Octo AI API server.');
+  }
+  if (host === apiBase()) checkedHost = host;
+}
+
+async function api(route, options = {}) {
+  const host = apiBase();
+  const token = state.token;
+  if (checkedHost !== host) await checkServer(host);
+  if (host !== apiBase() || token !== state.token) throw Error('Your account connection changed. Try again.');
+  const headers = new Headers(options.headers);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return requestJson(host, route, { ...options, headers });
 }
 
 const authModal = $('auth-modal');
@@ -87,6 +118,8 @@ function showAuthMode(mode) {
     : 'Sign in to access connected tools and saved scans.';
   $('name-wrap').classList.toggle('hidden', !registering);
   $('password').autocomplete = registering ? 'new-password' : 'current-password';
+  $('password').minLength = registering ? 10 : 1;
+  $('password').placeholder = registering ? 'At least 10 characters' : 'Your password';
   $('auth-submit').textContent = registering ? 'Create account' : 'Sign in';
   $('auth-switch-copy').textContent = registering ? 'Already have an account?' : 'New to Octo AI?';
   $('auth-switch').textContent = registering ? 'Sign in' : 'Create account';
@@ -98,7 +131,7 @@ function renderAuth() {
   const signedIn = Boolean(state.user);
   $('auth-form').classList.toggle('hidden', signedIn);
   $('auth-switch-copy').parentElement.classList.toggle('hidden', signedIn);
-  $('oauth-options')?.classList.toggle('hidden', signedIn || location.protocol === 'octo:');
+  $('oauth-options')?.classList.toggle('hidden', signedIn || packaged);
   $('auth-signed-in').classList.toggle('hidden', !signedIn);
   if (signedIn) {
     $('auth-title').textContent = 'Your account';
@@ -109,16 +142,35 @@ function renderAuth() {
   }
 }
 
+const oauthButtons = [...document.querySelectorAll('[data-oauth]')];
+async function updateOAuthOptions() {
+  if (packaged || state.user) return;
+  const host = apiBase();
+  oauthButtons.forEach(button => { button.disabled = true; });
+  try {
+    const providers = await api('/api/auth/oauth/status');
+    if (host !== apiBase()) return;
+    oauthButtons.forEach(button => { button.disabled = providers[button.dataset.oauth] !== true; });
+    $('oauth-availability').textContent = oauthButtons.every(button => button.disabled)
+      ? 'Google and GitHub sign-in are unavailable on this server. You can sign in with email.' : '';
+  } catch {
+    if (host === apiBase()) $('oauth-availability').textContent = 'Social sign-in could not be checked. Try email sign-in.';
+  }
+}
+
 function openAuth(trigger = document.activeElement) {
   if (!authModal.classList.contains('hidden')) return;
   authTrigger = trigger;
   previousOverflow = document.body.style.overflow;
   renderAuth();
-  $('api-host').value = apiBase();
+  $('api-host').value = apiHost || '';
+  $('api-host').placeholder = defaultApi || 'Same server as this workspace';
+  $('api-host-status').textContent = '';
   authModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   if (appShell && !appShell.contains(authModal)) appShell.inert = true;
   $('auth-close').focus();
+  void updateOAuthOptions();
 }
 
 function closeAuth() {
@@ -203,7 +255,7 @@ $('auth-form').onsubmit = async event => {
     closeAuth();
     notify('Signed in to Octo AI.');
   } catch (error) {
-    $('auth-error').textContent = error.message;
+    if (apiBase() === host) $('auth-error').textContent = error.message;
   } finally {
     button.disabled = false;
   }
@@ -215,32 +267,51 @@ $('logout').onclick = () => {
   notify('Signed out.');
 };
 
-$('save-api-host').onclick = event => {
+$('save-api-host').onclick = async event => {
   event.preventDefault();
   const input = $('api-host');
+  const status = $('api-host-status');
+  const button = event.currentTarget;
   let value = input.value.trim();
   if (value) {
     try {
       const url = new URL(value);
-      if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+      const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+      if ((url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback))
+        || url.username || url.password || url.search || url.hash) {
         throw Error('Unsupported API address.');
       }
       value = url.href.replace(/\/$/, '');
     } catch {
-      notify('Enter a complete HTTP or HTTPS API address, without credentials or URL parameters.');
+      status.textContent = 'Enter an HTTPS API address. HTTP is available for local development servers.';
       input.focus();
       return;
     }
   }
-  const previous = apiBase();
-  apiHost = value;
-  writeSetting('localStorage', 'octo_api_base', value);
-  if (previous !== apiBase()) clearSession();
-  input.value = apiBase();
-  notify('API address saved.');
+  const host = value || defaultApi;
+  button.disabled = true;
+  input.disabled = true;
+  status.textContent = 'Checking the server…';
+  try {
+    await checkServer(host);
+    const changed = apiBase() !== host;
+    apiHost = value;
+    checkedHost = host;
+    writeSetting('localStorage', 'octo_api_base', value || null);
+    if (changed) clearSession();
+    input.value = value;
+    status.textContent = 'Connected to the Octo AI API.';
+    void updateOAuthOptions();
+    if (state.tab === 'providers') void loadProviderAvailability();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    input.disabled = false;
+  }
 };
 
-document.querySelectorAll('[data-oauth]').forEach(button => {
+oauthButtons.forEach(button => {
   button.onclick = async () => {
     const errorMessage = $('oauth-error');
     const provider = button.dataset.oauth;
@@ -352,6 +423,7 @@ function selectTab(tab, { navigate = false } = {}) {
     $('editor-help').textContent = details.help;
   }
   if (tab === 'history') loadHistory();
+  if (tab === 'providers') void loadProviderAvailability();
   syncPrimaryAction();
   if (navigate) {
     tabs.find(button => button.dataset.tab === tab)?.focus({ preventScroll: true });
@@ -561,10 +633,15 @@ async function copyText(value, message) {
 }
 
 $('copy-button').onclick = () => copyText(editor.value, 'Draft copied.');
-$('download-button').onclick = () => {
+$('download-button').onclick = async () => {
   if (!editor.value.trim()) return notify('Add a draft before downloading.');
   const name = documentName($('file-name').textContent.replace(/\.[^.]+$/, ''), 'octo-draft');
-  downloadFile(editor.value, 'text/plain;charset=utf-8', name + '.txt');
+  try {
+    const result = await downloadFile(editor.value, 'text/plain;charset=utf-8', name + '.txt');
+    if (result === 'saved') notify('Draft saved.');
+  } catch (error) {
+    notify(error.message || 'Could not save the draft.');
+  }
 };
 $('upload-button')?.addEventListener('click', () => $('file').click());
 
@@ -689,8 +766,46 @@ function renderProviders(results) {
   }).join('') || '<p class="muted">No provider results yet.</p>';
 }
 
+const providerInputs = [...document.querySelectorAll('.provider-option input')];
+let availableProviders;
+let providerCheck = 0;
+
+function renderProviderAvailability() {
+  const kind = $('scan-kind').value;
+  for (const input of providerInputs) {
+    input.disabled = (kind === 'plagiarism' && input.value === 'gptzero')
+      || availableProviders?.[input.value] === false;
+  }
+  syncPrimaryAction();
+}
+
+async function loadProviderAvailability() {
+  const check = ++providerCheck;
+  const status = $('provider-availability');
+  availableProviders = null;
+  renderProviderAvailability();
+  status.textContent = 'Checking provider availability…';
+  try {
+    const { providers } = await api('/api/scans/status');
+    if (check !== providerCheck) return;
+    if (providerInputs.some(input => typeof providers?.[input.value] !== 'boolean')) throw Error();
+    availableProviders = providers;
+    status.textContent = Object.values(providers).some(Boolean)
+      ? 'Only providers configured on this server can receive scans.'
+      : 'No scan providers are configured. You can still use the local AI Pattern Detector.';
+  } catch {
+    if (check !== providerCheck) return;
+    status.textContent = 'Provider availability could not be checked. Use the local AI Pattern Detector if scans are unavailable.';
+  }
+  renderProviderAvailability();
+}
+$('scan-kind').onchange = renderProviderAvailability;
+
 function syncPrimaryAction() {
-  $('primary-action').disabled = state.tab === 'providers' && scanInProgress;
+  const unavailable = providerInputs.every(input => input.disabled);
+  const disabled = scanInProgress || unavailable;
+  $('scan-button').disabled = disabled;
+  $('primary-action').disabled = state.tab === 'providers' && disabled;
 }
 
 async function runProviders() {
@@ -700,27 +815,24 @@ async function runProviders() {
     return;
   }
   const text = editor.value.trim();
-  const providers = [...document.querySelectorAll('.provider-option input:checked')].map(box => box.value);
+  const providers = providerInputs.filter(box => box.checked && !box.disabled).map(box => box.value);
   const kind = $('scan-kind').value;
   if (countWords(text) < 40) return notify('Enter at least 40 words for provider checks.');
   if (!providers.length) return notify('Choose at least one provider.');
-  if (kind === 'plagiarism' && providers.includes('gptzero')) return notify('Select Winston AI or Copyleaks for plagiarism checks.');
   const owner = state.token;
-  const button = $('scan-button');
   scanInProgress = true;
-  button.disabled = true;
   syncPrimaryAction();
   try {
     const payload = { text, providers, kind, title: $('scan-title').value };
     const data = await api('/api/scans', { method: 'POST', body: JSON.stringify(payload) });
     if (state.token !== owner) return;
     renderProviders(data.results || []);
-    notify('Scan requests submitted.');
+    notify(data.results?.some(result => result.status !== 'error')
+      ? 'Scan requests submitted.' : 'No scans completed. Review the provider results.');
   } catch (error) {
     notify(error.message);
   } finally {
     scanInProgress = false;
-    button.disabled = false;
     syncPrimaryAction();
   }
 }

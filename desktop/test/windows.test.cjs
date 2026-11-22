@@ -15,6 +15,12 @@ test('packaged Studio runs locally and converts PDF to Word', { timeout: 120000 
   });
   program = await electron.launch({ executablePath, args: ['--user-data-dir=' + profile], timeout: 40000 });
   const page = await program.firstWindow();
+  await program.evaluate(({ dialog }, directory) => {
+    const path = process.getBuiltinModule('node:path');
+    dialog.showSaveDialog = async (_window, options) => ({
+      canceled: false, filePath: path.join(directory, options.defaultPath)
+    });
+  }, profile);
   await page.locator('#overview-view').waitFor({ state: 'visible' });
   assert.equal(await page.title(), 'Octo AI Studio');
   assert.equal(await page.locator('.studio-tile').count(), 12);
@@ -34,22 +40,19 @@ test('packaged Studio runs locally and converts PDF to Word', { timeout: 120000 
   await page.getByRole('tab', { name: 'Document Studio' }).click();
   const text = 'The Windows edition creates printable documents.';
   await page.locator('#doc-text').fill(text);
-  const [pdf] = await Promise.all([
-    page.waitForEvent('download', { timeout: 25000 }),
-    page.locator('#doc-create').click()
-  ]);
-  const pdfBytes = await readFile(await pdf.path());
+  await page.locator('#doc-page-numbers').uncheck();
+  await page.locator('#doc-create').click();
+  await page.getByText('PDF saved.', { exact: true }).waitFor();
+  const pdfBytes = await readFile(resolve(profile, 'octo-document.pdf'));
   assert.equal(pdfBytes.subarray(0, 5).toString(), '%PDF-');
 
   await page.locator('.feature-switches [data-doc-workflow="word"]').click();
   await page.locator('#doc-input').setInputFiles({ name: 'studio-test.pdf', mimeType: 'application/pdf', buffer: pdfBytes });
   await page.waitForFunction(value => document.getElementById('doc-text').value === value
     && document.getElementById('doc-export-status').textContent.startsWith('Text imported.'), text);
-  const [word] = await Promise.all([
-    page.waitForEvent('download', { timeout: 25000 }),
-    page.locator('#doc-create').click()
-  ]);
-  assert.equal((await readFile(await word.path())).subarray(0, 2).toString(), 'PK');
+  await page.locator('#doc-create').click();
+  await page.getByText('DOCX saved.', { exact: true }).waitFor();
+  assert.equal((await readFile(resolve(profile, 'studio-test.docx'))).subarray(0, 2).toString(), 'PK');
 
   const models = await page.evaluate(async () => {
     const response = await fetch('./vendor/face-models/face_recognition_model-weights_manifest.json');

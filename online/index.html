@@ -680,6 +680,7 @@
                     ></label
                   >
                 </fieldset>
+                <p class="helper-text" id="provider-availability" role="status"></p>
                 <button class="btn btn-primary provider-submit" id="scan-button">
                   Submit selected scans <span>↗</span>
                 </button>
@@ -760,18 +761,19 @@
             type="password"
             autocomplete="current-password"
             required
-            minlength="10"
-            placeholder="At least 10 characters"
+            maxlength="128"
+            placeholder="Your password"
           />
           <p class="form-error" id="auth-error" role="alert"></p>
           <button class="btn btn-primary auth-submit" type="submit" id="auth-submit">Sign in <span>→</span></button>
         </form>
         <div class="oauth-options" id="oauth-options">
           <p>Or continue with</p>
-          <button type="button" class="btn btn-outline oauth-btn" data-oauth="google">Continue with Google</button
-          ><button type="button" class="btn btn-outline oauth-btn" data-oauth="github">Continue with GitHub</button>
-          <p class="form-error" id="oauth-error" role="alert"></p>
+          <button type="button" class="btn btn-outline oauth-btn" data-oauth="google" disabled>Continue with Google</button
+          ><button type="button" class="btn btn-outline oauth-btn" data-oauth="github" disabled>Continue with GitHub</button>
+          <p class="api-host-help" id="oauth-availability" role="status"></p>
         </div>
+        <p class="form-error" id="oauth-error" role="alert"></p>
         <p class="auth-switch-row">
           <span id="auth-switch-copy">New to Octo AI?</span> <button id="auth-switch">Create account</button>
         </p>
@@ -779,7 +781,7 @@
           <details>
             <summary>Document and account server</summary>
             <label for="api-host">Backend address</label>
-            <p class="api-host-help">Use the address of your Octo document and account API.</p>
+            <p class="api-host-help">Leave the address blank to use the default Octo AI server.</p>
             <div class="api-host-row">
               <input id="api-host" placeholder="https://api.example.com" /><button
                 class="btn btn-outline"
@@ -788,6 +790,7 @@
                 Save
               </button>
             </div>
+            <p class="api-host-help" id="api-host-status" role="status"></p>
           </details>
         </div>
         <div id="auth-signed-in" class="hidden signed-in-info">

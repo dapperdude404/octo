@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,4 +29,15 @@ const xml = '<?xml version="1.0" encoding="utf-8"?>\n'
 for (const name of ['ic_launcher.xml', 'ic_launcher_round.xml']) {
   await writeFile(join(adaptive, name), xml);
 }
-console.log('Octo Studio launcher icons are ready.');
+for (const name of ['MainActivity.java', 'OctoDocumentPlugin.java']) {
+  await copyFile(new URL('../native/android-src/' + name, import.meta.url),
+    new URL('../android/app/src/main/java/com/octoai/app/' + name, import.meta.url));
+}
+const manifest = new URL('../android/app/src/main/AndroidManifest.xml', import.meta.url);
+const manifestXml = await readFile(manifest, 'utf8');
+if (!manifestXml.includes('android.permission.CAMERA')) {
+  await writeFile(manifest, manifestXml.replace('</manifest>',
+    '    <uses-permission android:name="android.permission.CAMERA" />\n'
+    + '    <uses-feature android:name="android.hardware.camera.any" android:required="false" />\n</manifest>'));
+}
+console.log('Octo Studio launcher icons and Android file saving are ready.');
