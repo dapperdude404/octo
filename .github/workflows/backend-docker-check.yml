@@ -6,6 +6,20 @@ on:
       - 'ai-octopus-v2/Dockerfile'
       - 'ai-octopus-v2/server/**'
       - 'ai-octopus-v2/package.json'
+      - 'ai-octopus-v2/scripts/build-web.js'
+      - 'ai-octopus-v2/web/**'
+      - 'app/vendor/**'
+      - 'render.yaml'
+      - '.github/workflows/backend-docker-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ai-octopus-v2/Dockerfile'
+      - 'ai-octopus-v2/server/**'
+      - 'ai-octopus-v2/package.json'
+      - 'ai-octopus-v2/scripts/build-web.js'
+      - 'ai-octopus-v2/web/**'
+      - 'app/vendor/**'
       - 'render.yaml'
       - '.github/workflows/backend-docker-check.yml'
   workflow_dispatch:
@@ -15,10 +29,35 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: octo
+          POSTGRES_PASSWORD: integration-test
+          POSTGRES_DB: octo
+        ports:
+          - 5432/tcp
+        options: --health-cmd "pg_isready -U octo -d octo" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Build deployable Docker image
         run: docker build -f ai-octopus-v2/Dockerfile -t ai-octopus-backend:check .
-      - name: Verify bundled migrations and runtime
+      - name: Start the backend and apply PostgreSQL migrations
+        env:
+          DATABASE_URL: postgresql://octo:integration-test@127.0.0.1:${{ job.services.postgres.ports[5432] }}/octo
+          JWT_SECRET: octo-backend-release-test-key-not-for-production
         run: |
-          docker run --rm --entrypoint sh ai-octopus-backend:check -c 'test -s server/prisma/migrations/20261117000000_initial/migration.sql && test -s server/public/index.html && node --version && ./node_modules/.bin/prisma --version'
+          docker run --detach --name octo-api --network host \
+            -e DATABASE_URL -e JWT_SECRET \
+            -e APP_ORIGIN=https://dapperdude404.github.io/octo/app/ \
+            -e PUBLIC_API_URL=https://api.example.test \
+            ai-octopus-backend:check
+      - name: Exercise the packaged API with PostgreSQL
+        run: node --test ai-octopus-v2/server/test/docker-runtime.mjs
+      - name: Show container log on failure
+        if: failure()
+        run: docker logs octo-api
