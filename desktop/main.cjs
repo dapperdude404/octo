@@ -111,9 +111,16 @@ async function requestAccountServer(request, path) {
       method: request.method, headers, body, redirect: 'error', credentials: 'omit',
       signal: AbortSignal.timeout(44000)
     });
+    const responseType = response.headers.get('content-type');
+    if (!responseType?.includes('application/json')) {
+      const error = response.ok || response.status === 404
+        ? 'This feature is unavailable on the current Octo AI account server.'
+        : 'The Octo AI account server is unavailable. Try again later.';
+      return Response.json({ error }, { status: 502 });
+    }
     return new Response(await response.arrayBuffer(), {
       status: response.status,
-      headers: { 'Content-Type': response.headers.get('content-type') || 'application/octet-stream', 'Cache-Control': 'no-store' }
+      headers: { 'Content-Type': responseType, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }
     });
   } catch {
     return Response.json({ error: 'Could not reach the Octo AI account server. Check your connection and try again.' }, { status: 502 });
