@@ -1,4 +1,3 @@
-import { validateImportedDocument } from './draft-guards.js';
 import {countWords} from './core.js';
 import {downloadFile, loadVendor, vendorUrl} from './vendor-loader.js';
 
@@ -255,7 +254,7 @@ export function initDocumentStudio({getDraft, sendToDraft}) {
     const old = edits;
     status.textContent = 'Reading ' + file.name + '…';
     try {
-      const result = validateImportedDocument(await readLocalDocument(file));
+      const result = await readLocalDocument(file);
       if (id !== upload) return;
       if (old !== edits) {
         status.textContent = 'The draft changed during import. Choose the file again to replace it.';
