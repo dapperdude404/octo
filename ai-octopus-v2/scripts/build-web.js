@@ -8,7 +8,7 @@ const target = resolve(root, 'server/public');
 const repository = resolve(root, '..');
 const webFiles = [
   'index.html', 'style.css', 'src.js', 'core.js', 'assistant.js', 'documents.js',
-  'vision.js', 'vendor-loader.js', 'manifest.webmanifest', 'classic.html',
+  'vision.js', 'vendor-loader.js', 'draft-guards.js', 'manifest.webmanifest', 'classic.html',
   'assets/octopus.svg', 'assets/octo-logo.png', 'assets/octo-icon.png', 'assets/octo-foreground.png',
   'assets/assistant-ribbon.webp', 'assets/studio-hero.webp',
   'assets/inter-latin.woff2', 'assets/inter-OFL.txt'
