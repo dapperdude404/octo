@@ -24,6 +24,21 @@
 
 ---
 
+## Octo AI Studio
+
+The studio groups writing, documents, and vision tools in a responsive dashboard. The assistant can outline, summarize, proofread, draft email templates, and send suggested text to the writing editor. Local mode uses rules in the browser. Connected AI uses the Node API and an OpenAI model.
+
+- **Documents.** Open PDF, DOCX, or TXT and export editable Word, PDF, TXT, HTML, Markdown, or JSON. PDF Maker supports A4 and US Letter, font sizes, page numbers, and a custom font. Conversions preserve extracted text. Scanned PDFs need OCR, and preserving original Word or PDF layouts requires a separate converter.
+- **PDF Pages.** Merge PDFs, extract page ranges, or turn JPG and PNG images into a PDF.
+- **Face recognition.** Enroll a reference photo with permission, compare one face at a time, and remove saved profiles when done. The model runs locally and stores profile names and numeric face vectors in the browser. Match results are similarity estimates.
+- **Writing.** Use the original pattern, clarity, grammar, comparison, and provider tools. Choose from five accent palettes in light or dark mode.
+
+From the repository root, run `npm --prefix ai-octopus-v2 run preview` and open the address it prints. This preview needs Node.js 22.18 or later. Browser tools need no service keys.
+
+For the connected assistant, configure `OPENAI_API_KEY` on the API server, optionally choose `OPENAI_MODEL`, and sign in using the workspace account. The API needs the existing PostgreSQL and JWT settings. Your prompt and recent connected conversation go to the model. The current draft is included only when selected.
+
+The canonical frontend is in `ai-octopus-v2/web`. Run `npm --prefix ai-octopus-v2 run web:sync` after editing it, then `npm --prefix ai-octopus-v2 run web:check`. The browser libraries and license files live in `app/vendor`. The Android and API builds copy those assets into their public bundle.
+
 ## 👋 About
 Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for students and writers who want to check their text and finish everyday tasks in one place.
 

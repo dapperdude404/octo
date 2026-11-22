@@ -2,7 +2,7 @@
   "name": "ai-octopus",
   "version": "2.5.0",
   "private": true,
-  "description": "AI Octopus writing intelligence — local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
+  "description": "AI Octopus writing intelligence \u2014 local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
   "engines": {
     "node": ">=22.18.0"
   },
@@ -18,7 +18,11 @@
     "android:sync": "npm run web:build && cap sync android",
     "android:open": "cap open android",
     "test": "node --test server/test/*.test.js",
-    "doctor": "node scripts/doctor.js"
+    "doctor": "node scripts/doctor.js",
+    "web:sync": "node scripts/build-web.js --sync-mirrors",
+    "web:check": "node scripts/build-web.js --check-mirrors",
+    "prestart": "npm run web:build",
+    "predev": "npm run web:build"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",

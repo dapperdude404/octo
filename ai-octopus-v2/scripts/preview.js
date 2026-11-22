@@ -6,14 +6,18 @@ import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../web');
+const repositoryVendor = path.resolve(root, '../../app/vendor');
 const port = Number(process.env.PREVIEW_PORT) || 4173;
-const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json; charset=utf-8', '.png':'image/png', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8' };
+const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json; charset=utf-8', '.png':'image/png', '.ico':'image/x-icon', '.mjs':'text/javascript; charset=utf-8', '.json':'application/json; charset=utf-8', '.webp':'image/webp', '.woff2':'font/woff2', '.ttf':'font/ttf', '.txt':'text/plain; charset=utf-8' };
 const server = http.createServer(async (request,response)=>{
   if (!['GET','HEAD'].includes(request.method)) {response.writeHead(405); response.end(); return;}
   let pathname;
   try {pathname = decodeURIComponent(new URL(request.url,'http://localhost').pathname);}catch{response.writeHead(400);response.end();return;}
-  const filename = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
-  if (filename !== root && !filename.startsWith(root+path.sep)){response.writeHead(403);response.end();return;}
+  const shared = pathname.startsWith('/vendor/');
+  const allowedRoot = shared ? repositoryVendor : root;
+  const relativePath = shared ? pathname.slice('/vendor'.length) : pathname === '/' ? '/index.html' : pathname;
+  const filename = path.resolve(allowedRoot, '.' + relativePath);
+  if (filename !== allowedRoot && !filename.startsWith(allowedRoot + path.sep)){response.writeHead(403);response.end();return;}
   try {
     if (!(await stat(filename)).isFile()) throw Error('Not a file');
     const bytes = await readFile(filename);

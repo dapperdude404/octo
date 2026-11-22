@@ -4,6 +4,7 @@ WORKDIR /app
 COPY ai-octopus-v2/package.json ./
 RUN npm install --no-audit --no-fund
 COPY ai-octopus-v2/ ./
+COPY app/vendor/ ./web/vendor/
 RUN npx prisma generate --schema server/prisma/schema.prisma && npm run web:build
 ENV NODE_ENV=production
 EXPOSE 3000

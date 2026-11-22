@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import path from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
+import { assistantInput, requestAssistantReply } from './assistant.js';
 import { oauthRouter } from './oauth.js';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
@@ -27,7 +28,7 @@ app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../public');
 app.disable('x-powered-by');
-app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", 'data:'], connectSrc: ["'self'", 'https:', 'http:'], objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'none'"] } } }));
+app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", 'data:', 'blob:'], workerSrc: ["'self'", 'blob:'], connectSrc: ["'self'", 'https:', 'http:'], objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'none'"] } } }));
 app.use(cors({ origin: [env.APP_ORIGIN, 'capacitor://localhost', 'http://localhost', 'https://localhost'], credentials: false }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
@@ -154,6 +155,25 @@ app.get('/api/scans/:id', requireAuth, async (req, res, next) => {
     }
     res.json({ scan });
   } catch (error) { next(error); }
+});
+
+app.get('/api/assistant/status', (_req, res) => {
+  res.json({ configured: Boolean(env.OPENAI_API_KEY), requiresAccount: true });
+});
+const assistantLimiter = rateLimit({
+  windowMs: 60_000, limit: 8, standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { error: 'Too many assistant requests. Try again in a minute.' }
+});
+app.post('/api/assistant', requireAuth, assistantLimiter, async (req, res, next) => {
+  if (!env.OPENAI_API_KEY) return res.status(503).json({ error: 'Connected AI needs an OpenAI API key on the server.' });
+  try {
+    const input = assistantInput.parse(req.body);
+    const reply = await requestAssistantReply(input, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL });
+    res.json({ reply });
+  } catch (error) {
+    if (error.status) return res.status(error.status).json({ error: error.message });
+    next(error);
+  }
 });
 
 app.post('/api/editor/clarity', (req, res) => {
