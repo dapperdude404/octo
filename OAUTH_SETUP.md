@@ -18,3 +18,17 @@ Status: **implemented in source, not configured or deployed**. No OAuth client c
 - Frontend session JWT remains in sessionStorage as in existing OCTO; consider moving to a hardened HttpOnly session-cookie design before sensitive production use.
 - OAuth endpoints require HTTPS in production; callback and exchange should be covered by application-level and live provider integration tests before deployment.
 - No production credentials, consent-screen approval, or live end-to-end tests have been supplied.
+
+## Render Secret Files compatibility (stabilization branch)
+
+The server will read `GITHUB_CLIENT_SECRET` and `GOOGLE_CLIENT_SECRET` from
+`/etc/secrets/GITHUB_CLIENT_SECRET` and `/etc/secrets/GOOGLE_CLIENT_SECRET`
+**only when their matching environment variables are blank or absent**.
+The environment variable takes precedence. This supports Render's Secret Files
+without committing secret material. Files must be regular, non-symlink, nonempty,
+and 8 KB or smaller. The OAuth status endpoint still reports booleans only.
+
+This is source implementation, **not** a production deployment. Never put OAuth
+secrets in GitHub source, issue comments, screenshots, or mobile assets.
+An OAuth configuration status of true does not prove that an actual login works.
+A separate approved deployment and browser callback test are still required.
