@@ -30,7 +30,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../public');
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", 'data:', 'blob:'], workerSrc: ["'self'", 'blob:'], connectSrc: ["'self'", 'https:', 'http:'], objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'none'"] } } }));
-app.use(cors({ origin: [env.APP_ORIGIN, 'capacitor://localhost', 'http://localhost', 'https://localhost'], credentials: false }));
+app.use(cors({ origin: [env.APP_ORIGIN, 'capacitor://localhost', 'octo://studio', 'http://localhost', 'https://localhost'], credentials: false }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
 const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 15, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many sign-in attempts. Try again in 15 minutes.' } });

@@ -98,7 +98,7 @@ function renderAuth() {
   const signedIn = Boolean(state.user);
   $('auth-form').classList.toggle('hidden', signedIn);
   $('auth-switch-copy').parentElement.classList.toggle('hidden', signedIn);
-  $('oauth-options')?.classList.toggle('hidden', signedIn);
+  $('oauth-options')?.classList.toggle('hidden', signedIn || location.protocol === 'octo:');
   $('auth-signed-in').classList.toggle('hidden', !signedIn);
   if (signedIn) {
     $('auth-title').textContent = 'Your account';

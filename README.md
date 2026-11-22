@@ -39,6 +39,14 @@ For the connected assistant, configure `OPENAI_API_KEY` on the API server, optio
 
 The canonical frontend is in `ai-octopus-v2/web`. Run `npm --prefix ai-octopus-v2 run web:sync` after editing it, then `npm --prefix ai-octopus-v2 run web:check`. The browser libraries and license files live in `app/vendor`. The Android and API builds copy those assets into their public bundle.
 
+### Windows desktop
+
+The **Build Octo AI Studio for Windows** workflow produces a portable 64-bit executable. Download the workflow artifact, extract the ZIP, and open `Octo-AI-Studio-Windows-x64.exe`. The artifact includes a SHA-256 checksum. Document, local assistant, and face tools are bundled with the app.
+
+On a Windows development machine, run `npm ci` and `npm run build:win` from `desktop/`. The executable is saved under `desktop/dist/`. Run `npm run test:win` after building to check the packaged workspace and document conversion.
+
+For connected tools, set the server address in account settings and sign in with email. The API server must allow the desktop origin `octo://studio`. Use HTTPS for a remote server. The OpenAI key stays on the server.
+
 ## 👋 About
 Hi, I'm **Aryan Sengar**, an M.Tech student. I built Octo as a free tool for students and writers who want to check their text and finish everyday tasks in one place.
 

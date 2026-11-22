@@ -117,7 +117,7 @@ button:disabled { cursor: default; opacity: .58; }
 
 .identity { display: flex; align-items: center; gap: 10px; width: fit-content; margin-left: 7px; }
 .logo-wrap, .modal-logo { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border: 1px solid #6956a7; border-radius: 11px; background: linear-gradient(145deg, #4d3f83, #2d2447); }
-.logo-wrap img, .modal-logo img { filter: hue-rotate(67deg) saturate(.8); }
+
 .identity-name { display: grid; line-height: 1.25; }
 .identity-name strong { font-size: 20px; font-weight: 750; letter-spacing: -.055em; }
 .identity-name strong span { color: var(--mint); }
