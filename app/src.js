@@ -1,116 +1,940 @@
-import {countWords,getSentences,localAnalyze,improveClarity,grammarReview,compareDrafts} from './core.js';
-const $=id=>document.getElementById(id);
-const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={tab:'detector',user:null,token:sessionStorage.getItem('octo_token')||'',authMode:'login',original:'',revision:'',lastAnalysis:null};
+import { countWords, localAnalyze, improveClarity, grammarReview, compareDrafts } from './core.js';
+import { initAssistant } from './assistant.js';
+import { documentName, initDocumentStudio, initPdfTools, readLocalDocument } from './documents.js';
+import { downloadFile } from './vendor-loader.js';
+import { initVision } from './vision.js';
+
+const $ = id => document.getElementById(id);
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+
+function readSetting(area, key) {
+  try {
+    return window[area].getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSetting(area, key, value) {
+  try {
+    if (value === null) window[area].removeItem(key);
+    else window[area].setItem(key, value);
+  } catch {
+    // The workspace also works when browser storage is disabled.
+  }
+}
+
+const state = {
+  tab: 'overview',
+  user: null,
+  token: readSetting('sessionStorage', 'octo_token') || '',
+  authMode: 'login',
+  original: null,
+  revision: null,
+  draftVersion: 0
+};
 let toastTimer;
-function notify(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),3200);}
-function text(){return $('editor').value.trim();}
-function setText(value){$('editor').value=String(value);updateCounts();}
-function updateCounts(){const v=$('editor').value,w=countWords(v);if($('doc-word-stat')){$('doc-word-stat').textContent=w.toLocaleString()+' words';$('doc-char-stat').textContent=v.length.toLocaleString()+' characters';}$('word-count').textContent=`${w.toLocaleString()} words`;$('char-count').textContent=`${v.length.toLocaleString()} characters`;$('read-time').textContent=`${Math.max(1,Math.ceil(w/220))} min read`;}
-function apiBase(){const userHost=localStorage.getItem('octo_api_base');const defaultHost=location.hostname.endsWith('.github.io')?'https://ai-octopus-api-l83b.onrender.com':'';return (userHost||defaultHost).replace(/\/$/,'');}
-async function api(route,options={}){
-  if(location.hostname.endsWith('.github.io') && !apiBase()) throw Error('This online version needs a connected API server for accounts, PDF/DOCX and provider scans. Open Sign in, then Connect an online API server.');
-  const headers={...options.headers};if(state.token)headers.Authorization=`Bearer ${state.token}`;
-  if(options.body&&!(options.body instanceof FormData))headers['Content-Type']='application/json';
-  let response;try{response=await fetch(`${apiBase()}${route}`,{...options,headers});}catch{throw Error('Could not reach the Octopus server. Set your API host if you are using Android.');}
-  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||`Request failed (${response.status})`);return data;
-}
-function openAuth(){
-  $('auth-modal').classList.remove('hidden');document.body.style.overflow='hidden';
-  $('auth-form').classList.toggle('hidden',!!state.user);$('auth-switch-copy').parentElement.classList.toggle('hidden',!!state.user);
-  $('auth-signed-in').classList.toggle('hidden',!state.user);$('api-host').value=apiBase();
-  if(state.user)$('signed-in-email').textContent=`Signed in as ${state.user.email}`;
-  $('auth-error').textContent='';setTimeout(()=>$('auth-close').focus(),30);
-}
-function closeAuth(){$('auth-modal').classList.add('hidden');document.body.style.overflow='';}
-function updateAccount(){
-  $('account-button').innerHTML=state.user?'My account <span aria-hidden="true">↗</span>':'Sign in <span aria-hidden="true">↗</span>';
-}
-function setAuthMode(mode){state.authMode=mode;const signup=mode==='register';$('auth-title').textContent=signup?'Create your account':'Welcome back';$('auth-sub').textContent=signup?'Save provider scans in your personal workspace.':'Sign in to save and revisit third-party provider scans.';$('name-wrap').classList.toggle('hidden',!signup);$('password').autocomplete=signup?'new-password':'current-password';$('auth-submit').innerHTML=signup?'Create account <span>→</span>':'Sign in <span>→</span>';$('auth-switch-copy').textContent=signup?'Already have an account?':'New to Octopus?';$('auth-switch').textContent=signup?'Sign in':'Create account';$('auth-error').textContent='';}
-$('account-button').onclick=openAuth;$('mobile-account').onclick=()=>{closeMenu();openAuth();};$('auth-close').onclick=closeAuth;$('auth-modal').onclick=e=>{if(e.target===$('auth-modal'))closeAuth();};document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAuth();});$('auth-switch').onclick=()=>setAuthMode(state.authMode==='login'?'register':'login');
-$('auth-form').onsubmit=async e=>{e.preventDefault();$('auth-error').textContent='';const btn=$('auth-submit');btn.disabled=true;try{const input={email:$('email').value.trim(),password:$('password').value};if(state.authMode==='register')input.displayName=$('display-name').value.trim();const data=await api(`/api/auth/${state.authMode}`,{method:'POST',body:JSON.stringify(input)});state.token=data.token;state.user=data.user;sessionStorage.setItem('octo_token',state.token);updateAccount();closeAuth();notify('Your Octopus account is ready.');if(state.tab==='history')loadHistory();}catch(error){$('auth-error').textContent=error.message;}finally{btn.disabled=false;}};
-$('logout').onclick=()=>{state.token='';state.user=null;sessionStorage.removeItem('octo_token');updateAccount();closeAuth();notify('Signed out. Local writing tools remain available.');if(state.tab==='history')renderHistory(null);};
-$('save-api-host').onclick=e=>{e.preventDefault();const value=$('api-host').value.trim().replace(/\/$/,'');if(value&&!/^https?:\/\//i.test(value))return notify('API server must start with https:// or http://');localStorage.setItem('octo_api_base',value);notify('API server saved.');};
+let stopCamera = () => {};
 
-document.querySelectorAll('[data-oauth]').forEach(btn=>btn.onclick=async()=>{
-  $('oauth-error').textContent='';btn.disabled=true;
-  try {const result=await api('/api/auth/oauth/status');const provider=btn.dataset.oauth;if(!result[provider])throw Error(provider+' sign-in is not configured yet.');
-    location.assign(apiBase()+'/api/auth/oauth/'+provider+'/start');
-  }catch(error){$('oauth-error').textContent=error.message;btn.disabled=false;}
+function notify(message) {
+  $('toast').textContent = message;
+  $('toast').classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.add('hidden'), 3800);
+}
+
+const packaged = location.protocol === 'octo:' || window.Capacitor?.isNativePlatform?.() === true;
+const defaultApi = packaged || location.hostname.endsWith('.github.io')
+  ? 'https://ai-octopus-api-l83b.onrender.com' : '';
+let apiHost = readSetting('localStorage', 'octo_api_base');
+let checkedHost;
+
+function apiBase() {
+  return (apiHost || defaultApi).replace(/\/$/, '');
+}
+
+async function requestJson(host, route, options = {}) {
+  const headers = new Headers(options.headers);
+  headers.set('Accept', 'application/json');
+  if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+  let response;
+  try {
+    const requestHost = location.protocol === 'octo:' && host === defaultApi ? '' : host;
+    response = await fetch(`${requestHost}${route}`, {
+      signal: AbortSignal.timeout(45000), ...options, headers, redirect: 'error', cache: 'no-store'
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError') throw Error('The Octo AI server took too long to respond. Try again.');
+    throw Error('Could not reach the Octo AI server. Check the connection and server address.');
+  }
+  const data = response.headers.get('content-type')?.includes('application/json')
+    ? await response.json().catch(() => null) : null;
+  if (!data || typeof data !== 'object') {
+    if (response.ok || response.status === 404 || response.status === 405) {
+      throw Error('This address returned a web page or an incompatible API. Check the Octo AI server address.');
+    }
+    throw Error(`The Octo AI server is unavailable (HTTP ${response.status}). Try again later.`);
+  }
+  if (!response.ok) {
+    const error = Error(typeof data.error === 'string' ? data.error : `The Octo AI server returned HTTP ${response.status}.`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+async function checkServer(host) {
+  const health = await requestJson(host, '/api/health');
+  if (health.ok !== true || health.service !== 'octo-ai-api') {
+    throw Error('This address does not identify itself as an Octo AI API server.');
+  }
+  if (host === apiBase()) checkedHost = host;
+}
+
+async function api(route, options = {}) {
+  const host = apiBase();
+  const token = state.token;
+  if (checkedHost !== host) await checkServer(host);
+  if (host !== apiBase() || token !== state.token) throw Error('Your account connection changed. Try again.');
+  const headers = new Headers(options.headers);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return requestJson(host, route, { ...options, headers });
+}
+
+const authModal = $('auth-modal');
+const authDialog = authModal.querySelector('[role="dialog"]') || authModal;
+const appShell = $('app-shell');
+let authTrigger;
+let previousOverflow;
+
+function showAuthMode(mode) {
+  state.authMode = mode;
+  const registering = mode === 'register';
+  $('auth-title').textContent = registering ? 'Create your account' : 'Welcome back';
+  $('auth-sub').textContent = registering
+    ? 'Save provider scans in your personal workspace.'
+    : 'Sign in to access connected tools and saved scans.';
+  $('name-wrap').classList.toggle('hidden', !registering);
+  $('password').autocomplete = registering ? 'new-password' : 'current-password';
+  $('password').minLength = registering ? 10 : 1;
+  $('password').placeholder = registering ? 'At least 10 characters' : 'Your password';
+  $('auth-submit').textContent = registering ? 'Create account' : 'Sign in';
+  $('auth-switch-copy').textContent = registering ? 'Already have an account?' : 'New to Octo AI?';
+  $('auth-switch').textContent = registering ? 'Sign in' : 'Create account';
+  $('auth-error').textContent = '';
+  if ($('oauth-error')) $('oauth-error').textContent = '';
+}
+
+function renderAuth() {
+  const signedIn = Boolean(state.user);
+  $('auth-form').classList.toggle('hidden', signedIn);
+  $('auth-switch-copy').parentElement.classList.toggle('hidden', signedIn);
+  $('oauth-options')?.classList.toggle('hidden', signedIn || packaged);
+  $('auth-signed-in').classList.toggle('hidden', !signedIn);
+  if (signedIn) {
+    $('auth-title').textContent = 'Your account';
+    $('auth-sub').textContent = 'Manage your sign-in and API connection.';
+    $('signed-in-email').textContent = `Signed in as ${state.user.email}`;
+  } else {
+    showAuthMode(state.authMode);
+  }
+}
+
+const oauthButtons = [...document.querySelectorAll('[data-oauth]')];
+async function updateOAuthOptions() {
+  if (packaged || state.user) return;
+  const host = apiBase();
+  oauthButtons.forEach(button => { button.disabled = true; });
+  try {
+    const providers = await api('/api/auth/oauth/status');
+    if (host !== apiBase()) return;
+    oauthButtons.forEach(button => { button.disabled = providers[button.dataset.oauth] !== true; });
+    $('oauth-availability').textContent = oauthButtons.every(button => button.disabled)
+      ? 'Google and GitHub sign-in are unavailable on this server. You can sign in with email.' : '';
+  } catch {
+    if (host === apiBase()) $('oauth-availability').textContent = 'Social sign-in could not be checked. Try email sign-in.';
+  }
+}
+
+function openAuth(trigger = document.activeElement) {
+  if (!authModal.classList.contains('hidden')) return;
+  authTrigger = trigger;
+  previousOverflow = document.body.style.overflow;
+  renderAuth();
+  $('api-host').value = apiHost || '';
+  $('api-host').placeholder = defaultApi || 'Same server as this workspace';
+  $('api-host-status').textContent = '';
+  authModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  if (appShell && !appShell.contains(authModal)) appShell.inert = true;
+  $('auth-close').focus();
+  void updateOAuthOptions();
+}
+
+function closeAuth() {
+  if (authModal.classList.contains('hidden')) return;
+  authModal.classList.add('hidden');
+  document.body.style.overflow = previousOverflow;
+  if (appShell && !appShell.contains(authModal)) appShell.inert = false;
+  const target = authTrigger instanceof HTMLElement && authTrigger.getClientRects().length
+    ? authTrigger : $('account-button');
+  target.focus();
+}
+
+function updateAccount() {
+  const label = state.user ? 'Account' : 'Sign in';
+  $('account-button').textContent = label;
+  if ($('mobile-account')) $('mobile-account').textContent = label;
+  if (!authModal.classList.contains('hidden')) renderAuth();
+}
+
+function clearSession() {
+  state.token = '';
+  state.user = null;
+  writeSetting('sessionStorage', 'octo_token', null);
+  updateAccount();
+  renderProviders([]);
+  if (state.tab === 'history') renderHistory(null);
+}
+
+function acceptSession(data) {
+  state.token = data.token;
+  state.user = data.user;
+  writeSetting('sessionStorage', 'octo_token', state.token);
+  updateAccount();
+  if (state.tab === 'history') loadHistory();
+}
+
+$('account-button').onclick = event => openAuth(event.currentTarget);
+if ($('mobile-account')) $('mobile-account').onclick = () => {
+  closeMenu();
+  openAuth($('menu-toggle') || $('account-button'));
+};
+$('auth-close').onclick = closeAuth;
+authModal.addEventListener('click', event => {
+  if (event.target === authModal) closeAuth();
 });
-async function completeOAuth(){
-  const params=new URLSearchParams(location.hash.slice(1));
-  const code=params.get('octo_oauth_code'),error=params.get('octo_oauth_error');
-  if(!code&&!error)return;
-  history.replaceState(null,'',location.pathname+location.search);
-  if(error){openAuth();$('oauth-error').textContent=error==='account_exists'?'This email already has an account. Sign in with your existing method; account linking requires a separate verified step.':'Social sign-in failed or was cancelled.';return;}
-  try{const data=await api('/api/auth/oauth/exchange',{method:'POST',body:JSON.stringify({code})});state.token=data.token;state.user=data.user;sessionStorage.setItem('octo_token',data.token);updateAccount();notify('Signed in successfully.');}
-  catch(e){openAuth();$('oauth-error').textContent=e.message;}
+$('auth-switch').onclick = () => showAuthMode(state.authMode === 'login' ? 'register' : 'login');
+
+function keepFocusInAuth(event) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeAuth();
+  }
+  if (event.key !== 'Tab') return;
+  const focusable = [...authDialog.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex]')]
+    .filter(item => item.tabIndex >= 0 && !item.matches(':disabled') && item.getClientRects().length);
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last?.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first?.focus();
+  }
 }
-const viewIds=['detector','editor','grammar','compare','documents','providers','history'];
-const titles={detector:'Analyze writing',editor:'Improve clarity',grammar:'Check grammar',compare:'Compare versions',documents:'Export Word DOCX',providers:'Submit scans',history:'View history'};
-function selectTab(tab,scroll=false){if(!viewIds.includes(tab))return;state.tab=tab;document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});viewIds.forEach(id=>$(id+'-view').classList.toggle('hidden',id!==tab));$('primary-action').innerHTML=`${titles[tab]} <span>→</span>`;$('editor-help').innerHTML=tab==='detector'?'Enter at least <b>40 words</b> for the AI-like pattern estimate.':tab==='providers'?'API keys and an <b>account</b> are needed for provider scans.':tab==='compare'?'Enter the revised draft in the <b>right panel</b>.':tab==='documents'?'Import PDF, DOCX or TXT, then export editable text.':'Your original draft stays in the editor on the left.';if(tab==='history')loadHistory();if(scroll)$('workspace').scrollIntoView({behavior:'smooth',block:'start'});}
-document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>selectTab(button.dataset.tab));document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>selectTab(b.dataset.goto,true));
-const menu=$('mobile-nav');function closeMenu(){menu.classList.add('hidden');$('menu-toggle').setAttribute('aria-expanded','false');}
-$('menu-toggle').onclick=()=>{menu.classList.toggle('hidden');$('menu-toggle').setAttribute('aria-expanded',String(!menu.classList.contains('hidden')));};menu.querySelectorAll('a').forEach(a=>a.onclick=closeMenu);
-function setTheme(light){document.documentElement.classList.toggle('light',light);$('theme-toggle').textContent=light?'☾':'☀';localStorage.setItem('octo_theme',light?'light':'dark');}
-$('theme-toggle').onclick=()=>setTheme(!document.documentElement.classList.contains('light'));setTheme(localStorage.getItem('octo_theme')==='light');
-const palettes=['aurora','plasma','solar'];
-function setPalette(name){const next=palettes.includes(name)?name:'aurora';document.documentElement.dataset.palette=next;$('theme-palette').value=next;localStorage.setItem('octo_palette',next);}
-$('theme-palette').onchange=()=>setPalette($('theme-palette').value);
-setPalette(localStorage.getItem('octo_palette'));
 
-$('editor').addEventListener('input',updateCounts);
-const sample=`Writing is a way to think more clearly, not just a way to finish a task. When a draft feels complicated, I read it aloud and look for sentences that try to do too much. I might change the order of two ideas or replace a long phrase with a shorter one. Moreover, a good revision should preserve the writer's intention. It is important to note that no single writing pattern can tell us who wrote a passage. In conclusion, useful feedback shows what can change without claiming to know the author's identity.`;
-$('sample-button').onclick=()=>{setText(sample);notify('Sample draft loaded.');};
-$('clear-button').onclick=()=>{setText('');$('file-name').textContent='';state.revision='';state.lastAnalysis=null;resetResults();notify('Editor cleared.');};
-$('paste-button').onclick=async()=>{try{const s=await navigator.clipboard.readText();setText(s);notify('Clipboard text pasted.');}catch{notify('Clipboard access unavailable. Paste directly in the editor.');}};
-$('copy-button').onclick=async()=>{if(!text())return notify('There is no text to copy.');try{await navigator.clipboard.writeText(text());notify('Draft copied to clipboard.');}catch{notify('Clipboard access unavailable.');}};
-$('download-button').onclick=()=>{if(!text())return notify('There is no text to download.');const url=URL.createObjectURL(new Blob([text()],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='ai-octopus-draft.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('file').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>10*1024*1024)throw Error('File must be under 10 MB.');const ext=file.name.split('.').at(-1)?.toLowerCase();if(ext==='txt'){setText(await file.text());}else if(ext==='pdf'||ext==='docx'){const fd=new FormData();fd.append('file',file);const data=await api('/api/documents/extract',{method:'POST',body:fd});setText(data.text);if(data.truncated)notify('Only the first 150,000 characters were loaded.');}else throw Error('Use a TXT, PDF or DOCX file.');$('file-name').textContent=file.name;$('doc-title').value=file.name.replace(/\.[^.]+$/,'').slice(0,70)||'ai-octopus-draft';notify('Document imported.');}catch(error){notify(error.message);}finally{e.target.value='';}};
-function resetResults(){$('score-number').textContent='—';$('score-label').textContent='Your score awaits';$('score-summary').textContent='Add a passage and press Analyze writing to see Octopus\'s pattern breakdown.';$('score-ring').style.setProperty('--percent','0%');$('score-ring').style.setProperty('--ring-color','#8292a6');$('score-ring').setAttribute('aria-valuenow','0');$('score-pin').style.left='0%';$('signals-list').innerHTML='<div class="empty-insight"><span>✳</span><p>Your insights will appear here after analysis.</p></div>';$('signals-count').textContent='0 insights';$('result-tag').textContent='READY';$('revision-preview').textContent='Your revised draft will appear here.';$('grammar-list').innerHTML='<div class="empty-insight"><span>✳</span><p>Choose Grammar and press Check grammar to begin.</p></div>';}
-function runDetector(){const r=localAnalyze(text());state.lastAnalysis=r;if(!r.available)return notify(r.note);const c=r.score<30?'var(--mint)':r.score<60?'var(--amber)':'var(--red)';$('score-number').textContent=r.score;$('score-ring').style.setProperty('--percent',`${r.score}%`);$('score-ring').style.setProperty('--ring-color',c);$('score-ring').setAttribute('aria-valuenow',r.score);$('score-pin').style.left=`${r.score}%`;$('score-label').textContent=r.score<30?'Human-like patterns':r.score<60?'Mixed writing signals':'AI-like patterns';$('score-label').style.color=c;$('score-summary').textContent=`Based on ${r.wordCount} words and ${r.sentenceCount} sentences. This is a pattern score, not an authorship probability.`;$('result-tag').textContent='ANALYZED';const entries=[['Stock expressions',r.components.stockPhrases,'Selected phrases: '+(r.matches.join(', ')||'none')],['Sentence rhythm',r.components.evenSentenceLength,'Similarity in sentence lengths'],['Contractions',r.components.noContractions,'Absence of contractions in longer passages'],['Em dashes',r.components.emDashes,'Em dash frequency'],['Formal transitions',r.components.formalOpeners,'Connectives at the start of sentences']];$('signals-count').textContent=`${entries.filter(x=>x[1]>0).length} signals`;$('signals-list').innerHTML=entries.map(([title,value,detail])=>`<div class="signal-item"><strong>${escapeHtml(title)}</strong><em>+${Number(value).toFixed(1)} pts</em><small>${escapeHtml(detail)}</small></div>`).join('');notify('Pattern analysis complete.');}
-function runClarity(){if(!text())return notify('Paste a draft first.');state.original=text();state.revision=improveClarity(state.original);$('revision-preview').textContent=state.revision;$('apply-revision').disabled=state.revision===state.original;$('restore-original').disabled=false;notify(state.revision===state.original?'No preset wording changes found.':'Revision ready for review.');}
-$('apply-revision').onclick=()=>{if(!state.revision)return;setText(state.revision);notify('Revision applied. You can restore the original.');};$('restore-original').onclick=()=>{if(!state.original)return;setText(state.original);notify('Original draft restored.');};$('copy-revision').onclick=async()=>{if(!state.revision)return notify('Generate a revision first.');try{await navigator.clipboard.writeText(state.revision);notify('Revision copied.');}catch{notify('Clipboard unavailable.');}};
-function runGrammar(){if(!text())return notify('Paste a draft first.');const r=grammarReview(text());$('grammar-summary').textContent=r.issueCount?`${r.issueCount} possible issue${r.issueCount===1?'':'s'} found`:'No listed issues found';$('grammar-sub').textContent=`Checked ${r.wordCount} words and ${r.sentenceCount} sentences against selected rules.`;$('grammar-list').innerHTML=r.issues.length?r.issues.map(item=>`<div class="grammar-item"><strong>${escapeHtml(item.type)}</strong><span class="grammar-quote">“${escapeHtml(item.match)}”</span><p>${escapeHtml(item.detail)}</p></div>`).join(''):'<div class="empty-insight"><span>✓</span><p>No issues matched these simple checks. A full proofread may still find others.</p></div>';notify('Grammar review complete.');}
-function runCompare(){const r=compareDrafts(text(),$('compare-text').value);if(r.error)return notify(r.error);$('compare-results').innerHTML=`<p><b>${r.added} added · ${r.removed} removed</b></p><div>${r.parts.map(x=>x.kind==='added'?`<ins>${escapeHtml(x.word)}</ins>`:x.kind==='removed'?`<del>${escapeHtml(x.word)}</del>`:escapeHtml(x.word)).join(' ')}</div>`;notify('Draft comparison complete.');}
-$('compare-button').onclick=runCompare;
-function selectedProviders(){return [...document.querySelectorAll('.provider-option input:checked')].map(x=>x.value);}
-function renderProviders(results){$('provider-results').innerHTML=(results||[]).map(r=>`<div class="provider-item"><strong>${escapeHtml(r.provider.toUpperCase())} · ${escapeHtml(r.status)}</strong><p>${escapeHtml(r.error||r.result?.note||JSON.stringify(r.result||{}).slice(0,400))}</p></div>`).join('')||'<p class="muted">No results.</p>';}
-async function runProviders(){if(!state.user){notify('Sign in first to use provider scans.');openAuth();return;}const v=text(),providers=selectedProviders(),kind=$('scan-kind').value;if(countWords(v)<40)return notify('Enter at least 40 words for provider checks.');if(!providers.length)return notify('Choose at least one provider.');if(kind==='plagiarism'&&providers.includes('gptzero'))return notify('GPTZero is not a plagiarism scanner.');const btn=$('scan-button');btn.disabled=true;try{const data=await api('/api/scans',{method:'POST',body:JSON.stringify({text:v,providers,kind,title:$('scan-title').value})});renderProviders(data.results);notify('Scan requests sent. Provider costs and completion times vary.');}catch(error){notify(error.message);}finally{btn.disabled=false;}}
-$('scan-button').onclick=runProviders;
-function renderHistory(scans){if(!state.user){$('history-results').innerHTML='<div class="empty-insight"><span>◷</span><p>Sign in to see your saved provider scans.</p></div><button class="btn btn-outline" id="history-signin">Sign in</button>';$('history-signin').onclick=openAuth;return;}$('history-results').innerHTML=scans?.length?scans.map(s=>`<div class="history-row"><div class="history-top"><strong>${escapeHtml(s.provider.toUpperCase())} · ${escapeHtml(s.kind)}</strong><span>${escapeHtml(s.status)}</span></div><p>${escapeHtml(s.title||'Untitled')} · ${s.wordCount} words · ${new Date(s.createdAt).toLocaleString()}</p>${s.error?`<p>${escapeHtml(s.error)}</p>`:''}<button class="subtle-btn" data-id="${escapeHtml(s.id)}">View record</button></div>`).join(''):'<div class="empty-insight"><span>◷</span><p>No saved scans. Try the optional provider tool.</p></div>';document.querySelectorAll('[data-id]').forEach(btn=>btn.onclick=async()=>{try{const {scan}=await api(`/api/scans/${encodeURIComponent(btn.dataset.id)}`);selectTab('providers');renderProviders([{provider:scan.provider,status:scan.status,error:scan.error,result:scan.result}]);}catch(error){notify(error.message);}});}
-async function loadHistory(){if(!state.user)return renderHistory(null);try{const {scans}=await api('/api/scans');renderHistory(scans);}catch(error){notify(error.message);}}$('refresh-history').onclick=loadHistory;
-function runPrimary(){if(state.tab==='detector')runDetector();else if(state.tab==='editor')runClarity();else if(state.tab==='grammar')runGrammar();else if(state.tab==='compare')runCompare();else if(state.tab==='documents')exportDocument('docx');else if(state.tab==='providers')runProviders();else if(state.tab==='history')loadHistory();}
-$('primary-action').onclick=runPrimary;
+$('auth-form').onsubmit = async event => {
+  event.preventDefault();
+  const button = $('auth-submit');
+  const host = apiBase();
+  const mode = state.authMode;
+  button.disabled = true;
+  $('auth-error').textContent = '';
+  try {
+    const input = { email: $('email').value.trim(), password: $('password').value };
+    if (mode === 'register') input.displayName = $('display-name').value.trim();
+    const data = await api(`/api/auth/${mode}`, { method: 'POST', body: JSON.stringify(input) });
+    if (apiBase() !== host) return;
+    if (!data.token || !data.user) throw Error('The server did not return an account session.');
+    acceptSession(data);
+    $('password').value = '';
+    closeAuth();
+    notify('Signed in to Octo AI.');
+  } catch (error) {
+    if (apiBase() === host) $('auth-error').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 
-function saveBlob(data,type,filename){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
-function documentName(){return ($('doc-title').value.trim()||'ai-octopus-draft').replace(/[^a-zA-Z0-9._-]/g,'-').replace(/^\.+/,'').slice(0,65)||'ai-octopus-draft';}
-function exportStatus(message){$('doc-export-status').textContent=message;}
-async function exportDocument(format){
-  const value=$('editor').value;if(!value.trim()){notify('Add or import a document first.');return;}
-  const base=documentName();exportStatus('Preparing '+format.toUpperCase()+'…');
-  try{
-    if(format==='docx'){
-      const host=apiBase();if(!host)throw Error('Connect an online API server to export DOCX.');
-      const response=await fetch(host+'/api/documents/export/docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:value,filename:base})});
-      if(!response.ok){const err=await response.json().catch(()=>({}));throw Error(err.error||'Word export failed ('+response.status+')');}
-      saveBlob(await response.blob(),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',base+'.docx');
-    }else if(format==='pdf'){
-      const win=window.open('','_blank');
-      if(!win)throw Error('Please allow pop-ups to print or save as PDF.');
-      win.document.open();
-      win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+escapeHtml(base)+'</title><style>@page{size:A4;margin:20mm}body{font:12pt/1.6 system-ui,sans-serif;color:#13233b}h1{font-size:19pt;border-bottom:1px solid #ddd;padding-bottom:12px}pre{font:inherit;white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body><h1>'+escapeHtml(base)+'</h1><pre>'+escapeHtml(value)+'</pre></body></html>');
-      win.document.close();win.focus();setTimeout(()=>win.print(),200);
-      exportStatus('Print window opened — choose “Save as PDF”.');return;
-    }else if(format==='txt')saveBlob(value,'text/plain;charset=utf-8',base+'.txt');
-    else if(format==='md')saveBlob(value,'text/markdown;charset=utf-8',base+'.md');
-    else if(format==='html')saveBlob('<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+escapeHtml(base)+'</title></head><body><main><h1>'+escapeHtml(base)+'</h1><pre style="white-space:pre-wrap;font:inherit">'+escapeHtml(value)+'</pre></main></body></html>','text/html;charset=utf-8',base+'.html');
-    else if(format==='json')saveBlob(JSON.stringify({title:base,wordCount:countWords(value),text:value},null,2),'application/json',base+'.json');
-    else throw Error('Unsupported format.');
-    exportStatus(format.toUpperCase()+' file saved.');notify(format.toUpperCase()+' file saved.');
-  }catch(error){exportStatus(error.message);notify(error.message);}
+$('logout').onclick = () => {
+  clearSession();
+  closeAuth();
+  notify('Signed out.');
+};
+
+$('save-api-host').onclick = async event => {
+  event.preventDefault();
+  const input = $('api-host');
+  const status = $('api-host-status');
+  const button = event.currentTarget;
+  let value = input.value.trim();
+  if (value) {
+    try {
+      const url = new URL(value);
+      const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+      if ((url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback))
+        || url.username || url.password || url.search || url.hash) {
+        throw Error('Unsupported API address.');
+      }
+      value = url.href.replace(/\/$/, '');
+    } catch {
+      status.textContent = 'Enter an HTTPS API address. HTTP is available for local development servers.';
+      input.focus();
+      return;
+    }
+  }
+  const host = value || defaultApi;
+  button.disabled = true;
+  input.disabled = true;
+  status.textContent = 'Checking the server…';
+  try {
+    await checkServer(host);
+    const changed = apiBase() !== host;
+    apiHost = value;
+    checkedHost = host;
+    writeSetting('localStorage', 'octo_api_base', value || null);
+    if (changed) clearSession();
+    input.value = value;
+    status.textContent = 'Connected to the Octo AI API.';
+    void updateOAuthOptions();
+    if (state.tab === 'providers') void loadProviderAvailability();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    input.disabled = false;
+  }
+};
+
+oauthButtons.forEach(button => {
+  button.onclick = async () => {
+    const errorMessage = $('oauth-error');
+    const provider = button.dataset.oauth;
+    const host = apiBase();
+    errorMessage.textContent = '';
+    button.disabled = true;
+    try {
+      const result = await api('/api/auth/oauth/status');
+      if (apiBase() !== host) return;
+      if (!result[provider]) throw Error('This sign-in provider is unavailable on the configured server.');
+      location.assign(`${host}/api/auth/oauth/${encodeURIComponent(provider)}/start`);
+    } catch (error) {
+      errorMessage.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  };
+});
+
+async function completeOAuth() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const code = params.get('octo_oauth_code');
+  const error = params.get('octo_oauth_error');
+  if (!code && !error) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    if (error) throw Error(error === 'account_exists'
+      ? 'An account already uses this email. Sign in with your existing method.'
+      : 'Social sign-in was cancelled or could not be completed.');
+    const result = await api('/api/auth/oauth/exchange', { method: 'POST', body: JSON.stringify({ code }) });
+    if (!result.token || !result.user) throw Error('The server did not return an account session.');
+    acceptSession(result);
+    notify('Signed in to Octo AI.');
+    return true;
+  } catch (failure) {
+    openAuth();
+    if ($('oauth-error')) $('oauth-error').textContent = failure.message;
+    return false;
+  }
 }
-document.querySelectorAll('[data-export]').forEach(btn=>btn.onclick=()=>exportDocument(btn.dataset.export));
 
-(async function boot(){updateCounts();updateAccount();await completeOAuth();if(state.token){try{const {user}=await api('/api/auth/me');state.user=user;updateAccount();}catch{state.token='';sessionStorage.removeItem('octo_token');}}})();
+const tools = {
+  overview: {title: 'Overview', description: 'Choose a tool to start working.', mode: 'Local tools ready'},
+  assistant: {title: 'AI Assistant', description: 'Outline an idea, revise a draft, or connect to an AI model.'},
+  detector: {
+    title: 'AI Pattern Detector', description: 'See which writing patterns stand out in your draft.',
+    action: 'Analyze writing', help: 'Use at least 40 words for a pattern estimate.'
+  },
+  editor: {
+    title: 'Clarity Editor', description: 'Review concise alternatives for common wordy phrases.',
+    action: 'Improve clarity', help: 'Review suggestions before applying them to your draft.'
+  },
+  grammar: {
+    title: 'Grammar Review', description: 'Check punctuation, repeated words, and common errors.',
+    action: 'Check grammar', help: 'Review the suggestions and choose which edits to keep.'
+  },
+  compare: {
+    title: 'Compare Drafts', description: 'See what changed between two versions of your writing.',
+    action: 'Compare versions', help: 'Add the revised draft in the comparison panel.'
+  },
+  documents: {title: 'Document Studio', description: 'Convert PDF and Word documents or build a PDF from text.'},
+  'pdf-tools': {title: 'PDF Pages', description: 'Organize PDFs and turn images into documents.'},
+  vision: {title: 'Face Recognition', description: 'Compare a photo with the profiles saved on your device.'},
+  providers: {
+    title: 'Provider Scans', description: 'Submit a draft to your configured third-party providers.',
+    action: 'Submit scans', help: 'Provider scans require an account and server-side API keys.',
+    mode: 'Account required'
+  },
+  history: {
+    title: 'Scan History', description: 'Review previously submitted scans from your account.',
+    mode: 'Account required'
+  }
+};
+const tabs = [...document.querySelectorAll('[data-tab]')];
+const tabList = tabs[0]?.closest('[role="tablist"]');
+const narrowTabs = matchMedia('(max-width: 820px)');
+
+function updateTabOrientation() {
+  const vertical = tabList?.closest('.sidebar') && !narrowTabs.matches;
+  tabList?.setAttribute('aria-orientation', vertical ? 'vertical' : 'horizontal');
+}
+
+function selectTab(tab, { navigate = false } = {}) {
+  const details = tools[tab];
+  if (!Object.hasOwn(tools, tab) || !$(`${tab}-view`)) return;
+  if (state.tab === 'vision' && tab !== 'vision') stopCamera();
+  state.tab = tab;
+  tabs.forEach(button => {
+    const active = button.dataset.tab === tab;
+    button.tabIndex = active ? 0 : -1;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+    $(`${button.dataset.tab}-view`)?.classList.toggle('hidden', !active);
+  });
+  const workspace = $('workspace');
+  workspace.dataset.activeTool = tab;
+  $('shared-editor-column').classList.toggle('hidden', !details.action);
+  if ($('workspace-title')) $('workspace-title').textContent = details.title;
+  if ($('workspace-crumb')) $('workspace-crumb').textContent = details.title;
+  if ($('workspace-description')) $('workspace-description').textContent = details.description;
+  if ($('workspace-mode-copy')) $('workspace-mode-copy').textContent = details.mode || 'Runs in browser';
+  if ($('workspace-mode')) $('workspace-mode').hidden = tab === 'assistant';
+  if (details.action) {
+    const primary = $('primary-action');
+    const label = primary.querySelector('[data-action-label]');
+    if (label) label.textContent = details.action;
+    else if (primary.firstChild?.nodeType === Node.TEXT_NODE) primary.firstChild.textContent = details.action + ' ';
+    else primary.textContent = details.action;
+    $('editor-help').textContent = details.help;
+  }
+  if (tab === 'history') loadHistory();
+  if (tab === 'providers') void loadProviderAvailability();
+  syncPrimaryAction();
+  if (navigate) {
+    tabs.find(button => button.dataset.tab === tab)?.focus({ preventScroll: true });
+    workspace.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+}
+
+tabs.forEach((button, i) => {
+  const tab = button.dataset.tab;
+  const panel = $(`${tab}-view`);
+  if (!panel) return;
+  button.id ||= `${tab}-tab`;
+  button.setAttribute('aria-controls', panel.id);
+  panel.setAttribute('role', 'tabpanel');
+  panel.setAttribute('aria-labelledby', button.id);
+  if (!panel.hasAttribute('tabindex')) panel.tabIndex = 0;
+  button.onclick = () => selectTab(tab);
+  button.onkeydown = event => {
+    const count = tabs.length;
+    let target;
+    if (event.key === 'Home') target = 0;
+    else if (event.key === 'End') target = count - 1;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') target = (i + count - 1) % count;
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') target = (i + 1) % count;
+    else return;
+    event.preventDefault();
+    selectTab(tabs[target].dataset.tab);
+    tabs[target].focus();
+  };
+});
+narrowTabs.addEventListener('change', updateTabOrientation);
+updateTabOrientation();
+
+document.querySelectorAll('[data-goto]').forEach(control => {
+  control.addEventListener('click', event => {
+    event.preventDefault();
+    closeMenu();
+    selectTab(control.dataset.goto, { navigate: true });
+  });
+});
+
+const menu = $('mobile-nav');
+const menuToggle = $('menu-toggle');
+
+function closeMenu() {
+  menu?.classList.add('hidden');
+  menuToggle?.setAttribute('aria-expanded', 'false');
+}
+
+if (menu && menuToggle) {
+  menuToggle.onclick = () => {
+    const closed = menu.classList.toggle('hidden');
+    menuToggle.setAttribute('aria-expanded', String(!closed));
+  };
+  menu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+}
+document.addEventListener('keydown', event => {
+  if (!authModal.classList.contains('hidden')) {
+    keepFocusInAuth(event);
+  } else if (event.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+    closeMenu();
+    menuToggle?.focus();
+  }
+});
+
+const paletteSelector = $('theme-palette');
+const palettes = ['aurora', 'plasma', 'solar', 'ocean', 'forest'];
+
+function setPalette(value) {
+  const palette = palettes.includes(value) ? value : 'aurora';
+  document.documentElement.dataset.palette = palette;
+  paletteSelector.value = palette;
+  writeSetting('localStorage', 'octo_palette', palette);
+}
+
+function setTheme(light) {
+  document.documentElement.classList.toggle('light', light);
+  const button = $('theme-toggle');
+  const label = light ? 'Switch to dark theme' : 'Switch to light theme';
+  button.setAttribute('aria-label', label);
+  button.title = label;
+  const icon = button.querySelector('use');
+  if (icon && $('i-sun') && $('i-moon')) icon.setAttribute('href', light ? '#i-moon' : '#i-sun');
+  else if (!icon) button.textContent = light ? '☾' : '☀';
+  writeSetting('localStorage', 'octo_theme', light ? 'light' : 'dark');
+}
+
+paletteSelector.onchange = () => setPalette(paletteSelector.value);
+$('theme-toggle').onclick = () => setTheme(!document.documentElement.classList.contains('light'));
+setPalette(readSetting('localStorage', 'octo_palette'));
+setTheme(readSetting('localStorage', 'octo_theme') === 'light');
+
+const editor = $('editor');
+const emptyResults = {
+  detectorLabel: $('score-label').textContent,
+  detectorSummary: $('score-summary').textContent,
+  detectorTag: $('result-tag').textContent,
+  signals: $('signals-list').innerHTML,
+  signalsCount: $('signals-count').textContent,
+  revision: $('revision-preview').textContent,
+  grammarLabel: $('grammar-summary').textContent,
+  grammarSummary: $('grammar-sub').textContent,
+  grammar: $('grammar-list').innerHTML,
+  comparison: $('compare-results').innerHTML
+};
+const currentResults = new Set();
+let uploadId = 0;
+let scanInProgress = false;
+
+function updateCounts() {
+  const value = editor.value;
+  const words = countWords(value);
+  const wordCount = `${words.toLocaleString()} ${words === 1 ? 'word' : 'words'}`;
+  const characterCount = `${value.length.toLocaleString()} ${value.length === 1 ? 'character' : 'characters'}`;
+  $('word-count').textContent = wordCount;
+  $('char-count').textContent = characterCount;
+  $('read-time').textContent = `${Math.ceil(words / 220)} min read`;
+}
+
+function resetDetector() {
+  $('score-number').textContent = '—';
+  $('score-label').textContent = emptyResults.detectorLabel;
+  $('score-label').style.removeProperty('color');
+  $('score-summary').textContent = emptyResults.detectorSummary;
+  $('score-ring').style.removeProperty('--percent');
+  $('score-ring').style.removeProperty('--ring-color');
+  $('score-ring').setAttribute('aria-valuenow', '0');
+  $('score-ring').setAttribute('aria-valuetext', 'No score yet');
+  $('score-pin').style.left = '0%';
+  $('result-tag').textContent = emptyResults.detectorTag;
+  $('signals-count').textContent = emptyResults.signalsCount;
+  $('signals-list').innerHTML = emptyResults.signals;
+}
+
+function resetClarity() {
+  state.original = null;
+  state.revision = null;
+  $('revision-preview').textContent = emptyResults.revision;
+  $('apply-revision').disabled = true;
+  $('restore-original').disabled = true;
+  $('copy-revision').disabled = true;
+}
+
+function resetGrammar() {
+  $('grammar-summary').textContent = emptyResults.grammarLabel;
+  $('grammar-sub').textContent = emptyResults.grammarSummary;
+  $('grammar-list').innerHTML = emptyResults.grammar;
+}
+
+function resetComparison() {
+  $('compare-results').innerHTML = emptyResults.comparison;
+}
+
+function draftChanged({ keepRevision = false } = {}) {
+  state.draftVersion += 1;
+  updateCounts();
+  if (currentResults.delete('detector')) resetDetector();
+  if (currentResults.delete('grammar')) resetGrammar();
+  if (currentResults.delete('compare')) resetComparison();
+  if (!keepRevision && currentResults.delete('editor')) resetClarity();
+}
+
+function setText(value, { keepRevision = false, filename = '' } = {}) {
+  editor.value = String(value);
+  $('file-name').textContent = filename;
+  draftChanged({ keepRevision });
+}
+
+editor.addEventListener('input', () => draftChanged());
+$('compare-text').addEventListener('input', () => {
+  if (currentResults.delete('compare')) resetComparison();
+});
+
+const sample = `Writing is a way to think more clearly and make ideas useful to other people. When a draft feels complicated, I read it aloud and look for sentences trying to do too much. I might change the order of two ideas or replace a long phrase with a shorter one. Moreover, a good revision should preserve the writer's intention. It is important to note that no single writing pattern can tell us who wrote a passage. In conclusion, useful feedback points to specific changes and gives writers room for their own judgment.`;
+
+$('sample-button').onclick = () => {
+  setText(sample);
+  notify('Sample draft loaded.');
+};
+$('clear-button').onclick = () => {
+  setText('');
+  editor.focus();
+  notify('Draft cleared.');
+};
+$('paste-button').onclick = async () => {
+  const version = state.draftVersion;
+  try {
+    const value = await navigator.clipboard.readText();
+    if (state.draftVersion !== version) return;
+    if (!value) return notify('Your clipboard is empty.');
+    setText(value);
+    notify('Clipboard text pasted.');
+  } catch {
+    notify('Paste directly into the editor to use text from your clipboard.');
+    editor.focus();
+  }
+};
+
+async function copyText(value, message) {
+  if (!value.trim()) return notify('Add text before copying.');
+  try {
+    await navigator.clipboard.writeText(value);
+    notify(message);
+  } catch {
+    notify('Clipboard access is unavailable in this browser.');
+  }
+}
+
+$('copy-button').onclick = () => copyText(editor.value, 'Draft copied.');
+$('download-button').onclick = async () => {
+  if (!editor.value.trim()) return notify('Add a draft before downloading.');
+  const name = documentName($('file-name').textContent.replace(/\.[^.]+$/, ''), 'octo-draft');
+  try {
+    const result = await downloadFile(editor.value, 'text/plain;charset=utf-8', name + '.txt');
+    if (result === 'saved') notify('Draft saved.');
+  } catch (error) {
+    notify(error.message || 'Could not save the draft.');
+  }
+};
+$('upload-button')?.addEventListener('click', () => $('file').click());
+
+$('file').onchange = async event => {
+  const file = event.currentTarget.files?.[0];
+  event.currentTarget.value = '';
+  if (!file) return;
+  const ticket = ++uploadId;
+  const version = state.draftVersion;
+  const uploadButton = $('upload-button');
+  if (uploadButton) uploadButton.disabled = true;
+  try {
+    const {text: value, truncated} = await readLocalDocument(file);
+    if (ticket !== uploadId) return;
+    if (version !== state.draftVersion) return notify('Your draft changed while importing. Choose the file again to replace it.');
+    setText(value, { filename: file.name });
+    notify(truncated ? 'Imported the first 150,000 characters.' : 'Document imported.');
+  } catch (error) {
+    if (ticket === uploadId) notify(error.message);
+  } finally {
+    if (ticket === uploadId && uploadButton) uploadButton.disabled = false;
+  }
+};
+
+function runDetector() {
+  const result = localAnalyze(editor.value.trim());
+  if (!result.available) return notify(result.note);
+  currentResults.add('detector');
+  const signalColor = result.score < 30 ? 'var(--mint)' : result.score < 60 ? 'var(--amber)' : 'var(--red)';
+  $('score-number').textContent = result.score;
+  $('score-ring').style.setProperty('--percent', `${result.score}%`);
+  $('score-ring').style.setProperty('--ring-color', signalColor);
+  $('score-ring').setAttribute('aria-valuenow', result.score);
+  $('score-ring').setAttribute('aria-valuetext', `${result.score} out of 100`);
+  $('score-pin').style.left = `${result.score}%`;
+  $('score-label').textContent = result.score < 30 ? 'Human-like patterns'
+    : result.score < 60 ? 'Mixed writing signals' : 'AI-like patterns';
+  $('score-label').style.color = signalColor;
+  $('score-summary').textContent = `Checked ${result.wordCount} words across ${result.sentenceCount} sentences. The score measures writing patterns alone.`;
+  $('result-tag').textContent = 'ANALYZED';
+  const components = result.components;
+  const signals = [
+    ['Stock expressions', components.stockPhrases, `Selected phrases: ${result.matches.join(', ') || 'none'}`],
+    ['Sentence rhythm', components.evenSentenceLength, 'Similarity in sentence lengths'],
+    ['Contractions', components.noContractions, 'Absence of contractions in longer passages'],
+    ['Em dashes', components.emDashes, 'Em dash frequency'],
+    ['Formal transitions', components.formalOpeners, 'Connectives at the start of sentences']
+  ];
+  const count = signals.filter(([, score]) => score > 0).length;
+  $('signals-count').textContent = `${count} ${count === 1 ? 'signal' : 'signals'}`;
+  $('signals-list').innerHTML = signals.map(([title, value, detail]) =>
+    `<div class="signal-item"><strong>${escapeHtml(title)}</strong>
+      <em>+${Number(value).toFixed(1)} pts</em><small>${escapeHtml(detail)}</small></div>`
+  ).join('');
+  notify('Pattern analysis complete.');
+}
+
+function runClarity() {
+  if (!editor.value.trim()) return notify('Add a draft first.');
+  currentResults.add('editor');
+  state.original = editor.value;
+  state.revision = improveClarity(state.original);
+  $('revision-preview').textContent = state.revision;
+  const changed = state.revision !== state.original;
+  $('copy-revision').disabled = false;
+  $('apply-revision').disabled = !changed;
+  $('restore-original').disabled = true;
+  notify(changed ? 'Revision ready for review.' : 'No preset changes matched this draft.');
+}
+
+$('apply-revision').onclick = () => {
+  if (state.revision === null) return;
+  setText(state.revision, { keepRevision: true, filename: $('file-name').textContent });
+  $('apply-revision').disabled = true;
+  $('restore-original').disabled = false;
+  notify('Revision applied. Use Restore original to undo.');
+};
+$('restore-original').onclick = () => {
+  if (state.original === null) return;
+  setText(state.original, { keepRevision: true, filename: $('file-name').textContent });
+  $('restore-original').disabled = true;
+  $('apply-revision').disabled = false;
+  notify('Original draft restored.');
+};
+$('copy-revision').onclick = () => copyText(state.revision || '', 'Revision copied.');
+
+function runGrammar() {
+  if (!editor.value.trim()) return notify('Add a draft first.');
+  currentResults.add('grammar');
+  const result = grammarReview(editor.value);
+  $('grammar-summary').textContent = result.issueCount
+    ? `${result.issueCount} possible ${result.issueCount === 1 ? 'issue' : 'issues'} found`
+    : 'No issues matched the current checks';
+  $('grammar-sub').textContent = `Checked ${result.wordCount} words across ${result.sentenceCount} sentences.`;
+  $('grammar-list').innerHTML = result.issues.length
+    ? result.issues.map(item => `<div class="grammar-item"><strong>${escapeHtml(item.type)}</strong>
+      <span class="grammar-quote">“${escapeHtml(item.match)}”</span><p>${escapeHtml(item.detail)}</p></div>`).join('')
+    : '<div class="empty-insight"><span aria-hidden="true">✓</span><p>No matches for these checks.</p></div>';
+  notify('Grammar review complete.');
+}
+
+function runCompare() {
+  const result = compareDrafts(editor.value, $('compare-text').value);
+  if (result.error) return notify(result.error);
+  currentResults.add('compare');
+  const changes = result.parts.map(({ kind, word }) => {
+    const content = escapeHtml(word);
+    if (kind === 'added') return `<ins>${content}</ins>`;
+    if (kind === 'removed') return `<del>${content}</del>`;
+    return content;
+  }).join(' ');
+  $('compare-results').innerHTML = `<p><b>${result.added} added · ${result.removed} removed</b></p><div>${changes}</div>`;
+  notify('Draft comparison complete.');
+}
+$('compare-button').onclick = runCompare;
+
+function renderProviders(results) {
+  $('provider-results').innerHTML = results.map(entry => {
+    const title = `${String(entry.provider).toUpperCase()} · ${entry.status}`;
+    const summary = entry.error || entry.result?.note || JSON.stringify(entry.result || {}).slice(0, 400);
+    return `<div class="provider-item"><strong>${escapeHtml(title)}</strong><p>${escapeHtml(summary)}</p></div>`;
+  }).join('') || '<p class="muted">No provider results yet.</p>';
+}
+
+const providerInputs = [...document.querySelectorAll('.provider-option input')];
+let availableProviders;
+let providerCheck = 0;
+
+function renderProviderAvailability() {
+  const kind = $('scan-kind').value;
+  for (const input of providerInputs) {
+    input.disabled = (kind === 'plagiarism' && input.value === 'gptzero')
+      || availableProviders?.[input.value] === false;
+  }
+  syncPrimaryAction();
+}
+
+async function loadProviderAvailability() {
+  const check = ++providerCheck;
+  const status = $('provider-availability');
+  availableProviders = null;
+  renderProviderAvailability();
+  status.textContent = 'Checking provider availability…';
+  try {
+    const { providers } = await api('/api/scans/status');
+    if (check !== providerCheck) return;
+    if (providerInputs.some(input => typeof providers?.[input.value] !== 'boolean')) throw Error();
+    availableProviders = providers;
+    status.textContent = Object.values(providers).some(Boolean)
+      ? 'Only providers configured on this server can receive scans.'
+      : 'No scan providers are configured. You can still use the local AI Pattern Detector.';
+  } catch {
+    if (check !== providerCheck) return;
+    status.textContent = 'Provider availability could not be checked. Use the local AI Pattern Detector if scans are unavailable.';
+  }
+  renderProviderAvailability();
+}
+$('scan-kind').onchange = renderProviderAvailability;
+
+function syncPrimaryAction() {
+  const unavailable = providerInputs.every(input => input.disabled);
+  const disabled = scanInProgress || unavailable;
+  $('scan-button').disabled = disabled;
+  $('primary-action').disabled = state.tab === 'providers' && disabled;
+}
+
+async function runProviders() {
+  if (scanInProgress) return;
+  if (!state.user) {
+    openAuth();
+    return;
+  }
+  const text = editor.value.trim();
+  const providers = providerInputs.filter(box => box.checked && !box.disabled).map(box => box.value);
+  const kind = $('scan-kind').value;
+  if (countWords(text) < 40) return notify('Enter at least 40 words for provider checks.');
+  if (!providers.length) return notify('Choose at least one provider.');
+  const owner = state.token;
+  scanInProgress = true;
+  syncPrimaryAction();
+  try {
+    const payload = { text, providers, kind, title: $('scan-title').value };
+    const data = await api('/api/scans', { method: 'POST', body: JSON.stringify(payload) });
+    if (state.token !== owner) return;
+    renderProviders(data.results || []);
+    notify(data.results?.some(result => result.status !== 'error')
+      ? 'Scan requests submitted.' : 'No scans completed. Review the provider results.');
+  } catch (error) {
+    notify(error.message);
+  } finally {
+    scanInProgress = false;
+    syncPrimaryAction();
+  }
+}
+$('scan-button').onclick = runProviders;
+
+function renderHistory(scans) {
+  const panel = $('history-results');
+  if (!state.user) {
+    panel.innerHTML = '<div class="empty-insight"><p>Sign in to see your saved provider scans.</p></div><button type="button" class="btn btn-outline" id="history-signin">Sign in</button>';
+    $('history-signin').onclick = event => openAuth(event.currentTarget);
+    return;
+  }
+  panel.innerHTML = scans?.length
+    ? scans.map(scan => {
+      const title = `${String(scan.provider).toUpperCase()} · ${scan.kind}`;
+      const detail = `${scan.title || 'Untitled'} · ${scan.wordCount} words · ${new Date(scan.createdAt).toLocaleString()}`;
+      return `<div class="history-row"><div class="history-top"><strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(scan.status)}</span></div><p>${escapeHtml(detail)}</p>
+        ${scan.error ? `<p>${escapeHtml(scan.error)}</p>` : ''}
+        <button type="button" class="subtle-btn" data-id="${escapeHtml(scan.id)}">View record</button></div>`;
+    }).join('')
+    : '<div class="empty-insight"><p>No saved scans yet.</p></div>';
+  panel.querySelectorAll('[data-id]').forEach(button => {
+    button.onclick = async () => {
+      const owner = state.token;
+      button.disabled = true;
+      try {
+        const { scan } = await api(`/api/scans/${encodeURIComponent(button.dataset.id)}`);
+        if (state.token !== owner) return;
+        selectTab('providers', { navigate: true });
+        renderProviders([scan]);
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  });
+}
+
+let historyRequest;
+async function loadHistory() {
+  if (!state.user) return renderHistory(null);
+  const owner = state.token;
+  if (historyRequest?.owner === owner) return;
+  const request = { owner };
+  historyRequest = request;
+  $('refresh-history').disabled = true;
+  try {
+    const { scans } = await api('/api/scans');
+    if (state.token === owner) renderHistory(scans);
+  } catch (error) {
+    notify(error.message);
+  } finally {
+    if (historyRequest === request) {
+      historyRequest = null;
+      $('refresh-history').disabled = false;
+    }
+  }
+}
+$('refresh-history').onclick = loadHistory;
+
+const primaryActions = {
+  detector: runDetector, editor: runClarity, grammar: runGrammar, compare: runCompare,
+  providers: runProviders
+};
+$('primary-action').onclick = () => primaryActions[state.tab]?.();
+
+async function boot() {
+  updateCounts();
+  resetClarity();
+  resetDetector();
+  updateAccount();
+  const sendToDraft = value => {
+    setText(value);
+    selectTab('editor', {navigate: true});
+    notify('Text added to the writing editor.');
+  };
+  stopCamera = initVision();
+  initDocumentStudio({getDraft: () => editor.value, sendToDraft});
+  initPdfTools();
+  initAssistant({
+    getDraft: () => editor.value,
+    setDraft: sendToDraft,
+    signedIn: () => Boolean(state.user),
+    request: (route, payload) => api(route, payload
+      ? {method: 'POST', body: JSON.stringify(payload), signal: AbortSignal.timeout(45000)}
+      : {signal: AbortSignal.timeout(8000)})
+  });
+  selectTab('overview');
+  const signedIn = await completeOAuth();
+  if (!signedIn && state.token) {
+    const token = state.token;
+    try {
+      const { user } = await api('/api/auth/me');
+      if (state.token !== token) return;
+      if (!user) throw Error('The server did not return an account.');
+      acceptSession({ token, user });
+    } catch {
+      if (state.token === token) clearSession();
+    }
+  }
+}
+
+boot();

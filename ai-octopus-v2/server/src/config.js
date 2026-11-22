@@ -8,6 +8,8 @@ const schema = z.object({
   PUBLIC_API_URL: z.string().default('http://localhost:3000'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   DATABASE_URL: z.string().min(1),
+  OPENAI_API_KEY: z.string().trim().default(''),
+  OPENAI_MODEL: z.string().trim().min(1).default('gpt-4.1-mini'),
   GPTZERO_API_KEY: z.string().optional().default(''),
   WINSTONAI_API_KEY: z.string().optional().default(''),
   COPYLEAKS_EMAIL: z.string().optional().default(''),

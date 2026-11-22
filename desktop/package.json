@@ -1,0 +1,33 @@
+{
+  "name": "octo-ai-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Octo AI Studio for Windows",
+  "author": "Aryan Sengar",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64 --publish never",
+    "test:win": "node --test test/windows.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0",
+    "playwright": "1.65.1"
+  },
+  "build": {
+    "appId": "com.octoai.studio",
+    "productName": "Octo AI Studio",
+    "files": ["main.cjs", "preload.cjs", "package.json"],
+    "extraResources": [
+      { "from": "../app", "to": "studio" },
+      { "from": "../LICENSE", "to": "Octo-LICENSE.txt" }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico",
+      "artifactName": "Octo-AI-Studio-Windows-x64.exe"
+    }
+  }
+}

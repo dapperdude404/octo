@@ -1,0 +1,76 @@
+name: Build Octo AI Studio for Windows
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'desktop/**'
+      - 'ai-octopus-v2/web/**'
+      - 'ai-octopus-v2/scripts/build-web.js'
+      - '.github/workflows/windows-exe.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'desktop/**'
+      - 'ai-octopus-v2/web/**'
+      - 'ai-octopus-v2/scripts/build-web.js'
+      - '.github/workflows/windows-exe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    name: Build and test portable Windows EXE
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Check the web mirror
+        run: node ../ai-octopus-v2/scripts/build-web.js --check-mirrors
+      - name: Install desktop build tools
+        run: npm ci --no-audit --no-fund
+      - name: Build the portable executable
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run build:win
+      - name: Smoke-test the packaged Windows app
+        run: npm run test:win
+      - name: Verify the EXE and write its checksum
+        shell: pwsh
+        run: |
+          $name = 'Octo-AI-Studio-Windows-x64.exe'
+          $base = Resolve-Path dist
+          $file = Get-Item (Join-Path $base $name)
+          $stream = [IO.File]::OpenRead($file.FullName)
+          try {
+            if ($stream.ReadByte() -ne 77 -or $stream.ReadByte() -ne 90) {
+              throw 'The portable build does not have a Windows executable header.'
+            }
+          } finally {
+            $stream.Dispose()
+          }
+          if ($file.Length -lt 1MB) { throw 'The portable build is unexpectedly small.' }
+          $hash = (Get-FileHash -Algorithm SHA256 $file.FullName).Hash.ToLowerInvariant()
+          Set-Content (Join-Path $base 'SHA256SUMS.txt') -Encoding utf8NoBOM -Value "$hash  $name"
+          Write-Output "$hash  $name"
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: Octo-AI-Studio-Windows-x64
+          path: |
+            desktop/dist/Octo-AI-Studio-Windows-x64.exe
+            desktop/dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

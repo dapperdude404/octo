@@ -1,16 +1,16 @@
 {
-  "name": "AI Octopus — Writing Intelligence",
-  "short_name": "AI Octopus",
+  "name": "Octo AI Studio",
+  "short_name": "Octo AI",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b111d",
   "theme_color": "#0b111d",
-  "description": "Writing analysis, clarity editing and grammar tools",
+  "description": "Writing assistant, document tools, and on-device face recognition.",
   "icons": [
     {
-      "src": "./assets/octopus.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./assets/octo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

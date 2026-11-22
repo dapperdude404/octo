@@ -16,7 +16,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: APP_ORIGIN
-        value: https://dapperdude404.github.io
+        value: https://dapperdude404.github.io/octo/app/
+      - key: PUBLIC_API_URL
+        value: https://ai-octopus-api-l83b.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
