@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { z } from 'zod';
+import { withOAuthSecrets } from './server-secrets.js';
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -23,4 +24,4 @@ const schema = z.object({
   COPYLEAKS_WEBHOOK_SECRET: z.string().default('')
 });
 
-export const env = schema.parse(process.env);
+export const env = schema.parse(withOAuthSecrets(process.env));

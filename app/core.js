@@ -34,17 +34,26 @@ export function localAnalyze(text) {
 }
 export function improveClarity(text) {
   let out = String(text || '');
+  // Simple replacements only. Do not guess author identity or alter evidence.
   const replacements = [
     [/\butili[sz]e\b/gi,'use'],[/\bleverage\b/gi,'use'],[/\bin order to\b/gi,'to'],
     [/\bdue to the fact that\b/gi,'because'],[/\bat this point in time\b/gi,'now'],
     [/\bwith regard to\b/gi,'about'],[/\bin the event that\b/gi,'if'],
-    [/\ba large number of\b/gi,'many'],[/\bhas the ability to\b/gi,'can'],
-    [/\bit is important to note that\b/gi,''],[/\bit should be noted that\b/gi,'']
+    [/\ba large number of\b/gi,'many'],[/\bhas the ability to\b/gi,'can']
   ];
-  for(const [pattern,replacement] of replacements) out=out.replace(pattern,replacement);
+  for (const [pattern,replacement] of replacements) out = out.replace(pattern,replacement);
+  // When removing an introductory phrase at a sentence boundary, preserve
+  // capitalization of the following word (e.g. ". It is important ... no" -> ". No").
+  // Limit this to known phrases, rather than automatically rewriting acronyms,
+  // equations, figure labels, DOI identifiers, or arbitrary sentence contents.
+  out = out.replace(/\b(?:it is important to note that|it should be noted that)\s+([\p{L}])/giu,
+    (matched, initial, offset, whole) => {
+      const before = whole.slice(0, offset);
+      const beginsSentence = /(?:^|[.!?][ \t]+|\n[ \t]*)$/u.test(before);
+      return beginsSentence ? initial.toLocaleUpperCase('en') : initial;
+    });
   return out.replace(/[ \t]+([,.;!?])/g,'$1').replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
 }
-
 export function grammarReview(text){
   text=String(text || '');
   const issues=[];

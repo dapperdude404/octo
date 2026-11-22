@@ -19,3 +19,18 @@ test('word-level diff identifies changed text',()=>{
   assert.equal(r.parts.find(x=>x.kind==='added').word,'bright');
 });
 test('clarity edits are conservative',()=>assert.equal(improveClarity('We utilize tools in order to work.'),'We use tools to work.'));
+
+test('clarity preserves sentence capitalization when removing an introductory phrase', () => {
+  const input = 'The writer’s intention. It is important to note that no single pattern proves authorship.';
+  assert.equal(improveClarity(input), 'The writer’s intention. No single pattern proves authorship.');
+  assert.equal(improveClarity('It should be noted that evidence is incomplete.'), 'Evidence is incomplete.');
+  assert.equal(improveClarity('We believe it is important to note that results vary.'), 'We believe results vary.');
+});
+
+test('clarity preserves research numerals and citations when removing stock phrases', () => {
+  const text = 'In order to measure [12], we recorded 0.42 and 10 cases. It is important to note that Fig. 2 is unchanged.';
+  const result = improveClarity(text);
+  assert.match(result, /to measure \[12\]/);
+  assert.match(result, /0\.42 and 10 cases/);
+  assert.match(result, /Fig\. 2 is unchanged/);
+});
