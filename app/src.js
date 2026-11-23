@@ -3,7 +3,6 @@ import { initAssistant } from './assistant.js';
 import { documentName, initDocumentStudio, initPdfTools, readLocalDocument } from './documents.js';
 import { downloadFile } from './vendor-loader.js';
 import { initVision } from './vision.js';
-import { requireDraftText, validateImportedDocument } from './draft-guards.js';
 
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
@@ -588,7 +587,7 @@ function draftChanged({ keepRevision = false } = {}) {
 }
 
 function setText(value, { keepRevision = false, filename = '' } = {}) {
-  editor.value = requireDraftText(value);
+  editor.value = String(value);
   $('file-name').textContent = filename;
   draftChanged({ keepRevision });
 }
@@ -655,7 +654,7 @@ $('file').onchange = async event => {
   const uploadButton = $('upload-button');
   if (uploadButton) uploadButton.disabled = true;
   try {
-    const {text: value, truncated} = validateImportedDocument(await readLocalDocument(file));
+    const {text: value, truncated} = await readLocalDocument(file);
     if (ticket !== uploadId) return;
     if (version !== state.draftVersion) return notify('Your draft changed while importing. Choose the file again to replace it.');
     setText(value, { filename: file.name });
