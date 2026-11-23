@@ -24,6 +24,13 @@
 
 ---
 
+
+> **Quick discovery:** Open-source writing and document workspace with local editing tools, Node.js API and Android debug builds.
+>
+> **Start here:** [Live web workspace](https://dapperdude404.github.io/octo/app/) · [Releases](https://github.com/dapperdude404/octo/releases) · [Contribution guide](CONTRIBUTING.md) · [Report a bug](https://github.com/dapperdude404/octo/issues/new?template=bug_report.yml) · [Discovery & social preview](DISCOVERY_PACK.md).
+>
+> **Scope:** Local writing-pattern scores are heuristics, not authorship probabilities; academic V5 and provider workflows require independent validation.
+
 ## Octo AI Studio
 
 The studio groups writing, documents, and vision tools in a responsive dashboard. The assistant can outline, summarize, proofread, draft email templates, and send suggested text to the writing editor. Local mode uses rules in the browser. Connected AI uses the Node API and an OpenAI model.
