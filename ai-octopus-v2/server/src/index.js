@@ -8,6 +8,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { assistantInput, requestAssistantReply } from './assistant.js';
 import { oauthRouter } from './oauth.js';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { z } from 'zod';
 import { env } from './config.js';
 import { prisma } from './db.js';
@@ -21,6 +22,7 @@ import mammoth from 'mammoth';
 import pdfParse from 'pdf-parse';
 import {makeDocx,safeDocumentName} from './documents.js';
 
+const { version: appVersion } = createRequire(import.meta.url)('../../package.json');
 const app = express();
 // Render terminates HTTPS at its reverse proxy. Trust only the immediate proxy hop
 // so express-rate-limit can derive the client IP from X-Forwarded-For.
@@ -46,7 +48,7 @@ const registerSchema = z.object({ email: z.string().email().max(254), password: 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1).max(128) });
 const scanSchema = z.object({ text: z.string().min(40).max(150000), title: z.string().trim().max(160).optional(), providers: z.array(z.enum(['gptzero','winston','copyleaks'])).min(1).max(3), kind: z.enum(['ai','plagiarism']).default('ai') });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'octo-ai-api', version: '2.5.0' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'octo-ai-api', version: appVersion }));
 app.post('/api/auth/register', authLimiter, async (req, res, next) => {
   try {
     const input = registerSchema.parse(req.body);
