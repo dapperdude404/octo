@@ -1,8 +1,8 @@
 {
   "name": "ai-octopus",
-  "version": "2.5.0",
+  "version": "5.1.0-rc.1",
   "private": true,
-  "description": "AI Octopus writing intelligence \u2014 local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
+  "description": "AI Octopus writing intelligence — local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
   "engines": {
     "node": ">=22.18.0"
   },
