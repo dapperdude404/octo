@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import test, { before } from 'node:test';
 
@@ -30,6 +31,7 @@ before(async () => {
     try {
       const health = await json('/api/health', 200);
       assert.equal(health.service, 'octo-ai-api');
+      assert.equal(health.version, JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version);
       return;
     } catch (error) {
       lastError = error;
