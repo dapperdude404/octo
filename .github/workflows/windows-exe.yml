@@ -37,6 +37,8 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: desktop/package-lock.json
+      - name: Verify matching release candidate metadata
+        run: node ../ai-octopus-v2/scripts/check-rc-version.js
       - name: Check the web mirror
         run: node ../ai-octopus-v2/scripts/build-web.js --check-mirrors
       - name: Install desktop build tools
