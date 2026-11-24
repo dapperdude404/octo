@@ -57,6 +57,9 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Confirm candidate versions and release guard
+        run: npm run version:check
+
       - name: Run source tests
         run: npm test
 
@@ -64,7 +67,7 @@ jobs:
         run: npm run web:check && npm run web:build
 
       - name: Generate Capacitor Android project
-        run: npx cap add android && node scripts/android-icon.js
+        run: npx cap add android && node scripts/android-icon.js && node scripts/stamp-android-version.js
 
       - name: Compile Android debug APK
         run: |
@@ -78,6 +81,9 @@ jobs:
           test -s "$apk"
           unzip -t "$apk" | tail -n 2
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | head -n 1 | tee /tmp/octo-apk-version.txt
+          grep -F "versionCode='5010001'" /tmp/octo-apk-version.txt
+          grep -F "versionName='5.1.0-rc.1'" /tmp/octo-apk-version.txt
           ls -lh "$apk"
           sha256sum "$apk"
 
