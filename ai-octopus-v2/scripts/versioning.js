@@ -4,7 +4,7 @@
  * RC -> final. This does NOT make a debug build production-signable.
  */
 export function parseOctoVersion(version) {
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$/.exec(version);
+  const match = typeof version === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-rc\.([1-9]\d*))?$/.exec(version);
   if (!match) throw new Error('Expected numeric SemVer (optionally -rc.N).');
   const [, majorText, minorText, patchText, candidateText] = match;
   const [major, minor, patch] = [majorText, minorText, patchText].map(Number);
