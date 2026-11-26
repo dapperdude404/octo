@@ -28,3 +28,9 @@ test('stamps only the generated Android build version fields', () => {
   assert.throws(() => stampAndroidGradle('versionCode 1', '5.1.0-rc.1'), /Expected one/);
   assert.throws(() => stampAndroidGradle(old + '\nversionCode 2', '5.1.0-rc.1'), /Expected one/);
 });
+
+test('rejects leading zero components and coerced non-string versions', () => {
+  for (const value of ['05.1.0', '5.01.0', '5.1.00', '5.1.0-rc.01', ['5.1.0'], null]) {
+    assert.throws(() => parseOctoVersion(value));
+  }
+});
