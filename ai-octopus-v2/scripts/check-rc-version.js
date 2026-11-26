@@ -5,8 +5,8 @@ const json = url => JSON.parse(readFileSync(new URL(url, import.meta.url), 'utf8
 const api = json('../package.json');
 const desktop = json('../../desktop/package.json');
 const lock = json('../../desktop/package-lock.json');
-const parsed = parseOctoVersion(api.version);
-if (parsed.candidate === null) throw new Error('This release-candidate branch requires an rc.N suffix.');
+parseOctoVersion(api.version);
+// Both release candidates and stable releases must pass the same consistency gate.
 if (api.version !== desktop.version
   || api.version !== lock.version
   || api.version !== lock.packages?.['']?.version) {
