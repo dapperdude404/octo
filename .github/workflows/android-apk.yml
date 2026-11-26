@@ -81,9 +81,11 @@ jobs:
           test -s "$apk"
           unzip -t "$apk" | tail -n 2
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | head -n 1 | tee /tmp/octo-apk-version.txt
-          grep -F "versionCode='5010001'" /tmp/octo-apk-version.txt
-          grep -F "versionName='5.1.0-rc.1'" /tmp/octo-apk-version.txt
+          expected_name="$(node -p 'require("./package.json").version')"
+          expected_code="$(node --input-type=module -e 'import {androidVersionCode} from "./scripts/versioning.js"; console.log(androidVersionCode(process.argv[1]))' "$expected_name")"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" > /tmp/octo-apk-badging.txt
+          grep -F "versionCode='$expected_code'" /tmp/octo-apk-badging.txt
+          grep -F "versionName='$expected_name'" /tmp/octo-apk-badging.txt
           ls -lh "$apk"
           sha256sum "$apk"
 
