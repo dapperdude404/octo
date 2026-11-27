@@ -1,8 +1,8 @@
 {
   "name": "ai-octopus",
-  "version": "2.5.0",
+  "version": "5.1.0-rc.1",
   "private": true,
-  "description": "AI Octopus writing intelligence \u2014 local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
+  "description": "AI Octopus writing intelligence — local pattern analysis, clarity, grammar, draft comparison and optional provider APIs",
   "engines": {
     "node": ">=22.18.0"
   },
@@ -14,15 +14,16 @@
     "db:migrate": "prisma migrate dev --schema server/prisma/schema.prisma --name init",
     "db:deploy": "prisma migrate deploy --schema server/prisma/schema.prisma",
     "web:build": "node scripts/build-web.js",
-    "android:add": "npm run web:build && cap add android && node scripts/android-icon.js",
-    "android:sync": "npm run web:build && cap sync android && node scripts/android-icon.js",
+    "android:add": "npm run web:build && cap add android && node scripts/android-icon.js && node scripts/stamp-android-version.js",
+    "android:sync": "npm run web:build && cap sync android && node scripts/android-icon.js && node scripts/stamp-android-version.js",
     "android:open": "cap open android",
     "test": "node --test server/test/*.test.js",
     "doctor": "node scripts/doctor.js",
     "web:sync": "node scripts/build-web.js --sync-mirrors",
     "web:check": "node scripts/build-web.js --check-mirrors",
     "prestart": "npm run web:build",
-    "predev": "npm run web:build"
+    "predev": "npm run web:build",
+    "version:check": "node scripts/check-rc-version.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",

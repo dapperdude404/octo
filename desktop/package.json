@@ -1,6 +1,6 @@
 {
   "name": "octo-ai-studio",
-  "version": "0.1.0",
+  "version": "5.1.0-rc.1",
   "private": true,
   "description": "Octo AI Studio for Windows",
   "author": "Aryan Sengar",
@@ -19,10 +19,20 @@
   "build": {
     "appId": "com.octoai.studio",
     "productName": "Octo AI Studio",
-    "files": ["main.cjs", "preload.cjs", "package.json"],
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
     "extraResources": [
-      { "from": "../app", "to": "studio" },
-      { "from": "../LICENSE", "to": "Octo-LICENSE.txt" }
+      {
+        "from": "../app",
+        "to": "studio"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "Octo-LICENSE.txt"
+      }
     ],
     "win": {
       "target": "portable",

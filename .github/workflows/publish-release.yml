@@ -1,16 +1,17 @@
 name: Publish AI Octopus release and backend package
 
+# Deliberately never triggered by push or PR: publication is a separate,
+# manually authorized action after review, version bump and signed-off release.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-release.yml'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Semantic version without v (example 2.5.1)'
+        description: 'Approved stable SemVer without v (e.g. 5.1.0)'
         required: true
-        default: '2.5.0'
+        type: string
+      confirm_publish:
+        description: 'Type CONFIRM-PUBLISH-vX.Y.Z exactly to permit publication'
+        required: true
         type: string
 
 permissions:
@@ -19,6 +20,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -28,9 +30,21 @@ jobs:
         id: version
         shell: bash
         env:
-          REQUESTED_VERSION: ${{ inputs.version || '2.5.0' }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+          CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
         run: |
-          if [[ ! "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Only numeric SemVer supported"; exit 1; fi
+          if [[ ! "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Only stable numeric SemVer supported"; exit 1; fi
+          if [[ "$CONFIRM_PUBLISH" != "CONFIRM-PUBLISH-v$REQUESTED_VERSION" ]]; then
+            echo "Publish confirmation mismatch; no tag, package, or release created"; exit 1
+          fi
+          PKG_VERSION="$(node -p 'require("./ai-octopus-v2/package.json").version')"
+          DESKTOP_VERSION="$(node -p 'require("./desktop/package.json").version')"
+          if [[ "$REQUESTED_VERSION" != "$PKG_VERSION" || "$REQUESTED_VERSION" != "$DESKTOP_VERSION" ]]; then
+            echo "Requested version does not match verified source metadata"; exit 1
+          fi
+          if [[ ! -s "RELEASE_NOTES_v$REQUESTED_VERSION.md" ]]; then
+            echo "Approved release notes missing for requested version"; exit 1
+          fi
           echo "tag=v$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -75,5 +89,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists; skipping rather than overwriting existing assets"
           else
-            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "AI Octopus $TAG" --notes-file RELEASE_NOTES_v2.5.0.md
+            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "AI Octopus $TAG" --notes-file "RELEASE_NOTES_v${{ inputs.version }}.md"
           fi
