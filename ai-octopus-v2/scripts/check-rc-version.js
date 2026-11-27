@@ -17,7 +17,10 @@ if (!healthSource.includes("version: appVersion")) {
   throw new Error('Health endpoint must use the API package version, not a stale literal.');
 }
 const workflow = readFileSync(new URL('../../.github/workflows/publish-release.yml', import.meta.url), 'utf8');
-if (!workflow.includes("workflow_dispatch:") || !workflow.includes("CONFIRM-PUBLISH-")) {
+if (!/^on:\s*\n  workflow_dispatch:/m.test(workflow)
+  || /^  (?:push|pull_request|schedule|release):/m.test(workflow)
+  || !workflow.includes("CONFIRM-PUBLISH-")
+  || !workflow.includes("if: github.ref == 'refs/heads/main'")) {
   throw new Error('Release publisher is missing a manual publish confirmation gate.');
 }
 console.log('OCTO candidate metadata verified: ' + api.version
