@@ -42,3 +42,38 @@ export function stampAndroidGradle(source, version) {
   }
   return updated;
 }
+
+/**
+ * GitHub runners generate a fresh debug-signing key for each build. A release
+ * candidate must not claim the production applicationId, or Android will reject
+ * it if an existing installation was signed using another key.
+ *
+ * Keep production com.octoai.app untouched. Give every CI debug APK a unique
+ * package namespace so it can be installed alongside any existing OCTO APK.
+ * Distinct CI runs intentionally do NOT upgrade one another or share app data.
+ */
+export function androidDebugPackageId(baseId, runId) {
+  if (typeof baseId !== 'string' || !/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/.test(baseId)) {
+    throw new Error('Invalid base Android application ID.');
+  }
+  if (typeof runId !== 'string' || !/^[1-9][0-9]{0,17}$/.test(runId)) {
+    throw new Error('Expected a numeric GitHub Actions run ID.');
+  }
+  return baseId + '.dev' + runId;
+}
+
+export function stampAndroidDebugIdentity(gradle, runId) {
+  const suffix = '.dev' + runId;
+  // Validate the entire resulting package ID and allow only known Gradle input.
+  androidDebugPackageId('com.octoai.app', runId);
+  if (typeof gradle !== 'string') throw new Error('Expected Gradle source text.');
+  const buildTypes = [...gradle.matchAll(/\bbuildTypes\s*\{/g)];
+  if (buildTypes.length !== 1) throw new Error('Expected one Android buildTypes section.');
+  if (/\bapplicationIdSuffix\b/.test(gradle)) {
+    throw new Error('Unexpected existing applicationIdSuffix; review package identity manually.');
+  }
+  // Capacitor's generated Gradle defines a release build type. Insert a debug
+  // block without touching release, applicationId or signing configuration.
+  return gradle.replace(/\bbuildTypes\s*\{/, match =>
+    match + '\n        debug { applicationIdSuffix "' + suffix + '" }');
+}
