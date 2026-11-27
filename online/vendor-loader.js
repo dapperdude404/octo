@@ -31,7 +31,17 @@ export function loadVendor(path, globalName) {
 }
 
 async function saveOnAndroid(blob, type, name) {
-  const saver = window.Capacitor.registerPlugin('OctoDocument');
+  // Capacitor's Android WebView injects registered native plugins under
+  // window.Capacitor.Plugins. registerPlugin is an @capacitor/core module
+  // export, not reliably a method on the injected window.Capacitor object.
+  const capacitor = window.Capacitor;
+  const nativeSaver = capacitor?.Plugins?.OctoDocument;
+  const saver = nativeSaver || (typeof capacitor?.registerPlugin === 'function'
+    ? capacitor.registerPlugin('OctoDocument') : null);
+  if (!saver || !['begin', 'append', 'finish', 'discard'].every(method =>
+    typeof saver[method] === 'function')) {
+    throw new Error('Android file saving is unavailable in this build. Please install the updated OCTO AI app.');
+  }
   await saver.begin();
   try {
     const chunkSize = 256 * 1024;
@@ -54,7 +64,7 @@ async function saveOnAndroid(blob, type, name) {
 
 export async function downloadFile(data, type, name) {
   const blob = data instanceof Blob ? data : new Blob([data], {type});
-  if (window.octoDesktop || window.Capacitor?.getPlatform() === 'android') {
+  if (window.octoDesktop || window.Capacitor?.getPlatform?.() === 'android') {
     if (blob.size > 128 * 1024 * 1024) throw Error('File exports are limited to 128 MB.');
     const result = window.octoDesktop
       ? await window.octoDesktop.saveDocument(name, await blob.arrayBuffer())
