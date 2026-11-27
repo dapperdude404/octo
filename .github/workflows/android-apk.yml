@@ -86,13 +86,22 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" > /tmp/octo-apk-badging.txt
           grep -F "versionCode='$expected_code'" /tmp/octo-apk-badging.txt
           grep -F "versionName='$expected_name'" /tmp/octo-apk-badging.txt
+          # Never distribute a CI-debug APK with the production package ID:
+          # ephemeral GitHub runner keys cannot upgrade an app signed elsewhere.
+          expected_package="com.octoai.app.dev$GITHUB_RUN_ID"
+          grep -F "package: name='$expected_package' " /tmp/octo-apk-badging.txt
+          if grep -Fq "package: name='com.octoai.app' " /tmp/octo-apk-badging.txt; then
+            echo "Refusing a debug APK that conflicts with the production package"; exit 1
+          fi
+          echo "Debug APK installs alongside the production app: $expected_package"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk" | grep -E "Signer #1 certificate SHA-256 digest"
           ls -lh "$apk"
           sha256sum "$apk"
 
       - name: Upload downloadable debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: ai-octopus-android-debug-apk
+          name: ai-octopus-android-debug-apk-isolated-${{ github.run_id }}
           path: ai-octopus-v2/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
