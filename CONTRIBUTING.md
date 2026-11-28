@@ -2,6 +2,10 @@
 
 Thanks for helping improve this project. Contributions should be useful, truthful and reproducible; GitHub stars are appreciated but never required for support or participation.
 
+## Four project rules
+
+All changes should follow the [OCTO AI Four Coding Rules](AGENTS.md): **think before coding**, **keep it simple**, **touch only what is required**, and **test until the goal is completed**. A passing CI build is useful evidence, but Android fixes also require device-level acceptance checks before they are described as fully resolved.
+
 ## Before contributing
 
 1. Read [README.md](README.md) and [DISCOVERY_PACK.md](DISCOVERY_PACK.md) for features, known limitations and current scope.
